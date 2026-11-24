@@ -1,0 +1,27 @@
+---
+import "../styles/global.css";
+
+type Props = {
+  title?: string;
+  description?: string;
+};
+
+const {
+  title = "星辰界 · 杨鑫成",
+  description = "一片星海，几段日常。欢迎来到杨鑫成的个人小世界。",
+} = Astro.props;
+---
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#050711" />
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/site-icon.svg" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

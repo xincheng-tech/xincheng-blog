@@ -1,0 +1,38 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+import { sections } from "../data/sections";
+
+export function getStaticPaths() {
+  return sections.map((section) => ({
+    params: { slug: section.slug },
+    props: { section },
+  }));
+}
+
+const { section } = Astro.props;
+---
+<SiteLayout title={section.name + " · 星辰界"} description={section.intro}>
+  <main class="section-page" style={"--accent:" + section.color}>
+    <a class="back-link" href="/" aria-label="返回星辰界首页">← <span>返回星海</span></a>
+    <div class="section-orb" aria-hidden="true"></div>
+    <article class="section-content">
+      <p class="eyebrow">0{sections.indexOf(section) + 1} / {section.gu}</p>
+      <h1>{section.name}</h1>
+      <p class="section-intro">{section.intro}</p>
+      <div class="content-divider"><span></span> 已收入窍中的片段</div>
+      <ul class="entry-list">
+        {section.items.map((item) => (
+          <li><div class="entry-row"><strong>{item.title}</strong><span>{item.meta}</span><b>↗</b></div></li>
+        ))}
+      </ul>
+      <p class="empty-note" id="content">正文正在整理，先在这里留下一个入口。</p>
+    </article>
+    <footer class="section-footer">星海仍在缓慢旋转</footer>
+  </main>
+</SiteLayout>
+
+<script>
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") window.location.assign("/");
+  });
+</script>

@@ -4,9 +4,9 @@
 
 **Goal:** 在 `xincheng-tech/xincheng---` 建立 Astro + React Three Fiber 个人站首期，提供日常、技术、播客三颗栏目星及可访问的栏目页面。
 
-**Architecture:** Astro 输出首页、栏目详情与静态导航；首页只把交互星场作为 React 岛加载。栏目定义放在独立 TypeScript 数据文件中，场景组件通过明确的选中栏目和状态回调与 DOM 导航通信。栏目点击先运行短跃迁，再进入静态栏目路由；所有入口保留普通链接，WebGL 失败或减少动态效果时照常可访问。
+**Architecture:** Astro 输出首页、栏目详情与静态导航；首页由 Astro 直接预渲染标题和栏目链接，React `client:only` 岛只增强这些已有入口并延迟加载交互星场。栏目定义放在独立 TypeScript 数据文件中，场景通过 `selectedSlug`、`phase` 和回调与 DOM 导航通信。栏目点击先运行短跃迁，再进入静态栏目路由；所有入口保留普通链接，WebGL 失败或减少动态效果时照常可访问。
 
-**Tech Stack:** Astro、React、TypeScript、Three.js、@react-three/fiber、@react-three/drei、@react-three/postprocessing、postprocessing、CSS。
+**Tech Stack:** Astro、React、TypeScript、Three.js、@react-three/fiber、@react-three/postprocessing、postprocessing、CSS。Drei 未在首期实现中使用，因此不安装。
 
 ## Global Constraints
 
@@ -70,10 +70,10 @@
 - Modify: `package.json`, `package-lock.json`
 
 **Interfaces:**
-- `StarfieldScene` props：`sections: readonly Section[]`、`activeSlug: string | null`、`onPreview(slug: string | null): void`、`onArrive(slug: string): void`、`onReturn(): void`、`reducedMotion: boolean`。
-- 页面通过 `client:load` 加载 `UniverseExperience`；本任务可先使用静态星海和非动画点击回调。
+- `StarfieldScene` props：`sections`、`selectedSlug`、`phase`、`reducedMotion`、`mobile`、`onPreview`、`onActivate`、`onContextLost`。
+- Astro 页面独立 SSR 栏目链接，并通过 `client:only="react"` 加载 `UniverseExperience`；该岛使用选择器接管 SSR 链接，不生成第二份链接。
 
-- [ ] 安装 `three`、`@react-three/fiber`、`@react-three/drei`、`@react-three/postprocessing`、`postprocessing`。
+- [ ] 安装 `three`、`@react-three/fiber`、`@react-three/postprocessing`、`postprocessing`；不安装未使用的 Drei。
 - [ ] 使用固定 seed 和 `useMemo` 生成螺旋星系位置/颜色，避免每帧重算随机数组。
 - [ ] 使用单个 BufferGeometry/Points 绘制背景星点，以三个 mesh 绘制栏目星；不用逐粒子 React 组件。
 - [ ] 对重复尘埃采用实例化几何或同一 Points 批处理；控制移动端粒子量和 Canvas DPR。
@@ -92,17 +92,17 @@
 
 **Interfaces:**
 - 状态联合类型：`"idle" | "preview" | "travel" | "arrived" | "return"`。
-- `UniverseExperience` 接收 `sections` 与 SSR 导航元素；维护 `state`、`selectedSlug`、`previewSlug`。
+- `UniverseExperience` 接收 `sections`，通过 `[data-slug]` 选择并增强 Astro SSR 导航；维护 `phase`、`selectedSlug`、`previewSlug`。
 - 激活栏目先把状态设为 `travel`；动画完成后导航到该栏目的静态路由。
 - `ButterflyGuide` 接收 `target: { x: number; y: number } | null` 与 `visible: boolean`，只绘制 Canvas 2D 蝴蝶与短寿命光尘。
 
 - [ ] 用 React 状态实现 idle/preview/travel/arrived/return 转换，防止动画期间重复点击启动第二次跃迁。
 - [ ] 在指针悬停和键盘焦点时显示栏目名、蛊名和一句简介；目的地预览应在跃迁前可见。
-- [ ] 按钮激活执行约 1.5 秒相机推进和星点速度变化；白闪只在正常动态模式短暂出现。
+- [ ] 栏目入口激活执行约 1.5 秒相机推进后进入对应静态栏目路由；尊重减少动态效果设置，不使用白闪。
 - [ ] 在桌面跃迁期间开启轻量 Bloom/色差；抵达后关闭高速效果并跳转至 `/<slug>/`。
-- [ ] 用同一组栏目数据渲染 DOM 标签，三维对象本身设为装饰性且不承载唯一文本。
+- [ ] 用 Astro SSR 的栏目链接和同一组栏目数据提供标签文本，三维对象本身设为装饰性且不承载唯一文本。
 - [ ] 从 `demo/index.html` 提取蝴蝶的四翅、翅脉和现有尾迹绘制逻辑，封装到独立 Canvas 组件；保留距离发射粒子和瞬移清尾逻辑。
-- [ ] 为返回按钮、Escape 和浏览器返回提供回到首页的路径。
+- [ ] 为栏目页返回链接、首页 Escape 和浏览器返回提供回到首页的路径。
 - [ ] 运行 `npm run build` 并检查栏目路由及客户端类型。
 
 ## Task 4: 初始化错误处理、无障碍与设备降级
@@ -119,11 +119,11 @@
 - `UniverseExperience` 用 `sceneAvailable: boolean` 切换 WebGL 场景与静态导航，二者消费相同的 `sections`。
 - 动态偏好由 `matchMedia("(prefers-reduced-motion: reduce)")` 初始化并监听变化。
 
-- [ ] WebGL Canvas 初始化抛错或上下文丢失时，将场景切换到 fallback 并保留三条普通栏目链接。
+- [ ] WebGL Canvas 初始化抛错或上下文丢失时，将场景切换到 fallback 并保留三条普通栏目链接；可选后处理失败时保留基础星场。
 - [ ] React islands 尚未加载时，Astro SSR 链接保持可见且可使用；JS 加载后不能先隐藏链接。
 - [ ] 减少动态效果模式直接淡入栏目页面，不执行高速镜头、强模糊或闪白。
-- [ ] 窄屏关闭 postprocessing，降低粒子数及 `dpr`，确保标签/入口不互相遮挡。
-- [ ] 确保 Tab/Shift+Tab 顺序自然、焦点可见、Enter/Space 激活入口、Escape 返回。
+- [ ] 窄屏关闭 postprocessing，降低粒子数及 `dpr`，以自适应纵向列表避免标签/入口互相遮挡。
+- [ ] 确保 Tab/Shift+Tab 顺序自然、焦点可见、Enter/Space 激活入口、Escape 取消首页跃迁。
 - [ ] 运行 `npm run build`，浏览器手动检查 WebGL 失效时静态入口仍能打开。
 
 ## Task 5: 浏览器验收、开源核对和交付说明
