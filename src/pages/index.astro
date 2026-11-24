@@ -6,14 +6,6 @@ import { UniverseExperience } from "../components/UniverseExperience";
 <SiteLayout>
   <main class="home-shell">
     <div class="sky-wash" aria-hidden="true"></div>
-    <div class="ink-atmosphere" aria-hidden="true">
-      <span class="ink-calligraphy ink-calligraphy--left">逍遥</span>
-      <span class="ink-calligraphy ink-calligraphy--right">定仙游</span>
-      <svg class="ink-strokes" viewBox="0 0 1000 700" preserveAspectRatio="none">
-        <path d="M28 106 C74 124 96 152 142 198 C104 186 75 187 39 205 C88 226 117 244 153 282" />
-        <path d="M858 435 C901 402 932 380 981 371 C949 418 922 461 887 521 C926 501 950 496 990 500" />
-      </svg>
-    </div>
     <UniverseExperience client:only="react" sections={sections} />
 
     <header class="site-header">
@@ -22,22 +14,20 @@ import { UniverseExperience } from "../components/UniverseExperience";
     </header>
 
     <section class="hero" aria-labelledby="site-title">
-      <p class="eyebrow">空窍 · 其一</p>
+      <p class="eyebrow">GALAXY · 01</p>
       <h1 id="site-title">星辰界</h1>
-      <p class="hero-copy">星辰是目的地，定仙游是载具。<br />这里收着日常、技术和一些声音。</p>
+      <p class="hero-copy">三颗行星，三段旅程。<br />选择一颗星，进入它的世界。</p>
     </section>
 
     <nav class="constellation" aria-label="栏目星辰">
-      {sections.map((section, index) => (
+      {sections.map((section) => (
         <a
           class:list={["constellation-link", "constellation-link--" + section.slug]}
           href={"/" + section.slug + "/"}
           data-slug={section.slug}
           style={"--accent:" + section.color}
-          aria-label={"前往" + section.name + "，" + section.gu + "：" + section.intro}
+          aria-label={"前往" + section.name + "星球：" + section.intro}
         >
-          <span class="orbit-mark" aria-hidden="true"></span>
-          <span class="link-index">0{index + 1} / {section.gu}</span>
           <span class="link-name">{section.name}</span>
           <span class="link-summary">{section.intro}</span>
         </a>
@@ -46,7 +36,7 @@ import { UniverseExperience } from "../components/UniverseExperience";
 
     <footer class="site-footer">
       <span>杨鑫成 · PERSONAL UNIVERSE</span>
-      <span>选择一颗星，开始跃迁</span>
+      <span>选择行星，开始星际漫游</span>
     </footer>
   </main>
 </SiteLayout>

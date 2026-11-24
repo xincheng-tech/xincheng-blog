@@ -1,6 +1,7 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
 import { sections } from "../data/sections";
+import { SectionUniverseExperience } from "../components/SectionUniverseExperience";
 
 export function getStaticPaths() {
   return sections.map((section) => ({
@@ -12,27 +13,36 @@ export function getStaticPaths() {
 const { section } = Astro.props;
 ---
 <SiteLayout title={section.name + " · 星辰界"} description={section.intro}>
-  <main class="section-page" style={"--accent:" + section.color}>
-    <a class="back-link" href="/" aria-label="返回星辰界首页">← <span>返回星海</span></a>
-    <div class="section-orb" aria-hidden="true"></div>
-    <article class="section-content">
-      <p class="eyebrow">0{sections.indexOf(section) + 1} / {section.gu}</p>
-      <h1>{section.name}</h1>
+  <main class="section-page section-galaxy" style={"--accent:" + section.color}>
+    <div class="sky-wash" aria-hidden="true"></div>
+    <SectionUniverseExperience client:only="react" section={section} />
+    <header class="site-header">
+      <a class="wordmark" href="/" aria-label="星辰界首页">XINGCHEN <span>VERSE</span></a>
+      <span class="header-note"><i></i> 星际档案</span>
+    </header>
+    <a class="back-link" href="/" aria-label="返回星辰界首页">← 返回星系</a>
+    <section class="section-hero" aria-labelledby="section-title">
+      <p class="eyebrow">ORBIT · 0{sections.indexOf(section) + 1}</p>
+      <h1 id="section-title">{section.name}</h1>
       <p class="section-intro">{section.intro}</p>
-      <div class="content-divider"><span></span> 已收入窍中的片段</div>
-      <ul class="entry-list">
-        {section.items.map((item) => (
-          <li><div class="entry-row"><strong>{item.title}</strong><span>{item.meta}</span><b>↗</b></div></li>
-        ))}
-      </ul>
-      <p class="empty-note" id="content">正文正在整理，先在这里留下一个入口。</p>
-    </article>
-    <footer class="section-footer">星海仍在缓慢旋转</footer>
+    </section>
+    <nav class="content-orbit-nav" aria-label={section.name + "内容星球"}>
+      {section.items.map((item, index) => (
+        <a
+          id={"content-item-" + index}
+          href={"#content-item-" + index}
+          data-content-index={index}
+          style={"--content-index:" + index}
+          aria-label={"聚焦内容星：" + item.title + "，" + item.meta}
+        >
+          <span class="content-orb-mark" aria-hidden="true"></span>
+          <span class="content-orbit-copy">
+            <strong>{item.title}</strong>
+            <small>{item.meta}</small>
+          </span>
+        </a>
+      ))}
+    </nav>
+    <footer class="section-footer">每颗内容星，都记录着一段旅程</footer>
   </main>
 </SiteLayout>
-
-<script>
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") window.location.assign("/");
-  });
-</script>

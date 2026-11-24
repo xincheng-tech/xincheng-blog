@@ -96,12 +96,12 @@ function Galaxy({ mobile }: { mobile: boolean }) {
   );
 }
 
-function Dust({ mobile }: { mobile: boolean }) {
+function Dust({ mobile, animate = true }: { mobile: boolean; animate?: boolean }) {
   const points = useRef<import("three").Points>(null);
   const geometry = useMemo(() => makeGalaxy(mobile ? 300 : 850, 9917, 18, -14, 8), [mobile]);
   const texture = useMemo(makePointTexture, []);
   useFrame((_, delta) => {
-    if (points.current) points.current.rotation.z += delta * 0.003;
+    if (animate && points.current) points.current.rotation.z += delta * 0.003;
   });
   return (
     <points ref={points} geometry={geometry}>
@@ -264,5 +264,14 @@ export function StarfieldScene(props: Props) {
         </OptionalEffectsBoundary>
       )}
     </Canvas>
+  );
+}
+
+export function GalaxyBackdrop({ mobile, animate = true }: { mobile: boolean; animate?: boolean }) {
+  return (
+    <>
+      <Galaxy mobile={mobile} />
+      <Dust mobile={mobile} animate={animate} />
+    </>
   );
 }

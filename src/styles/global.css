@@ -21,21 +21,6 @@ button, a { -webkit-tap-highlight-color: transparent; }
   position: relative; min-height: 100svh; overflow: hidden;
   background: radial-gradient(ellipse at 50% 48%, #151a33 0%, #090c19 42%, var(--night) 78%);
 }
-.ink-atmosphere {
-  position: absolute; z-index: 1; inset: 0; overflow: hidden; pointer-events: none;
-  color: #d4cdbb; opacity: .095; mix-blend-mode: screen;
-  mask-image: linear-gradient(90deg, #000 0%, #000 13%, transparent 34%, transparent 66%, #000 88%, #000 100%);
-}
-.ink-calligraphy {
-  position: absolute; writing-mode: vertical-rl; text-orientation: upright;
-  font-family: "STKaiti", "KaiTi", "Kaiti SC", "Songti SC", serif;
-  font-weight: 600; line-height: 1.65; letter-spacing: .28em;
-  text-shadow: 0 0 18px #d8d0ba55;
-}
-.ink-calligraphy--left { left: 4.5%; top: 24%; font-size: clamp(28px, 4.3vw, 56px); transform: rotate(-5deg); }
-.ink-calligraphy--right { right: 5%; bottom: 19%; font-size: clamp(24px, 3.8vw, 48px); transform: rotate(4deg); }
-.ink-strokes { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: #d4cdbb; stroke-width: 13; stroke-linecap: round; stroke-linejoin: round; opacity: .4; filter: blur(1.5px); }
-.ink-strokes path:nth-child(2) { stroke-width: 18; }
 .sky-wash {
   position: absolute; inset: -20%; pointer-events: none;
   background:
@@ -56,7 +41,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .header-note i { width: 6px; height: 6px; border-radius: 50%; background: #78edee; box-shadow: 0 0 12px #78edee; }
 .hero { position: absolute; z-index: 1; top: 20%; left: 50%; width: min(90vw, 680px); transform: translateX(-50%); text-align: center; }
 .eyebrow { margin: 0 0 18px; color: #9ca8cc; font-size: 10px; letter-spacing: .45em; text-transform: uppercase; }
-.hero h1, .section-content h1, .not-found h1 {
+.hero h1, .section-hero h1, .not-found h1 {
   margin: 0; font-family: "Songti SC", "STSong", "SimSun", serif; font-weight: 400;
   font-size: clamp(56px, 9vw, 104px); letter-spacing: .28em; padding-left: .28em;
   background: linear-gradient(105deg, #fff 6%, #ffe4ae 40%, #a6edff 69%, #d0baff 94%);
@@ -66,41 +51,41 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .hero-copy { margin: 24px 0 0; color: #a9b3d1; font-size: 13px; line-height: 2.1; letter-spacing: .1em; }
 .constellation { position: absolute; z-index: 1; inset: 0; }
 .constellation-link {
-  position: absolute; display: grid; gap: 7px; width: min(230px, 27vw); padding: 16px;
-  text-decoration: none; border-radius: 18px; transition: background .25s, transform .35s;
+  position: absolute; display: grid; gap: 8px; width: min(230px, 27vw); padding: 12px 14px;
+  text-decoration: none; border: 1px solid transparent; border-radius: 16px;
+  background: linear-gradient(130deg, #11182b88, #090d1c44); backdrop-filter: blur(8px);
+  transition: background .25s, border-color .25s, transform .35s;
 }
-.constellation-link:hover { background: #b9c8ff0b; transform: translateY(-4px); }
+.constellation-link:hover, .constellation-link:focus-visible { background: #151d32bd; border-color: color-mix(in srgb, var(--accent), transparent 58%); transform: translateY(-4px); }
 .constellation-link--daily { left: 15%; top: 59%; }
 .constellation-link--tech { right: 14%; top: 58%; }
 .constellation-link--podcast { left: 42%; top: 71%; }
-.orbit-mark {
-  display: block; width: 16px; height: 16px; margin: 3px 0 14px 9px; border-radius: 50%;
-  border: 1px solid color-mix(in srgb, var(--accent), transparent 40%);
-  box-shadow: inset 0 0 17px color-mix(in srgb, var(--accent), transparent 72%), 0 0 26px color-mix(in srgb, var(--accent), transparent 75%);
-}
-.orbit-mark::after { content: ""; display: block; width: 6px; height: 6px; margin: 4px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 18px var(--accent); }
-.constellation-link .orbit-mark { margin-bottom: 40px; }
-.link-index { color: var(--accent); opacity: .78; font-size: 9px; letter-spacing: .2em; }
-.link-name { font-family: "Songti SC", "STSong", serif; font-size: 24px; letter-spacing: .24em; }
+.link-name { color: var(--accent); font-family: "Songti SC", "STSong", serif; font-size: 24px; letter-spacing: .22em; }
 .link-summary { max-width: 23em; color: #8e99b8; font-size: 11px; line-height: 1.8; }
 .site-footer { bottom: 24px; }
-.section-page { display: grid; place-items: center; padding: 100px 24px 80px; }
 .back-link { position: absolute; z-index: 3; top: 30px; left: clamp(22px, 5vw, 70px); color: #b6c1df; text-decoration: none; font-size: 12px; letter-spacing: .12em; }
+.section-page > .back-link { top: 58px; }
 .back-link:hover { color: white; }
-.section-orb { position: absolute; width: min(76vw, 680px); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--accent), transparent 91%), transparent 68%); filter: blur(4px); }
-.section-content { position: relative; width: min(100%, 650px); }
-.section-content h1 { font-size: clamp(54px, 8vw, 82px); }
-.section-intro { margin: 18px 0 44px; color: #aab4d2; font-size: 14px; line-height: 2; }
-.content-divider { display: flex; align-items: center; gap: 13px; color: #8792b2; font-size: 10px; letter-spacing: .2em; }
-.content-divider span { width: 22px; height: 1px; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
-.entry-list { list-style: none; padding: 0; margin: 16px 0 0; border-top: 1px solid #a7b2dc22; }
-.entry-list li { border-bottom: 1px solid #a7b2dc22; }
-.entry-row { display: grid; grid-template-columns: 1fr auto 14px; align-items: center; gap: 16px; padding: 18px 2px; }
-.entry-list strong { font-size: 13px; font-weight: 450; transition: color .2s; }
-.entry-list span { color: #7984a3; font-size: 10px; }
-.entry-list b { color: var(--accent); font-size: 13px; font-weight: 400; }
-.empty-note { margin-top: 26px; color: #66718f; font-size: 11px; }
-.section-footer { bottom: 25px; justify-content: center; }
+.section-page { display: block; padding: 0; }
+.section-universe { position: absolute; z-index: 0; inset: 0; pointer-events: none; }
+.section-canvas { position: absolute !important; inset: 0; pointer-events: auto; }
+.section-hero { position: absolute; z-index: 2; top: 14%; left: 50%; width: min(90vw, 660px); transform: translateX(-50%); text-align: center; pointer-events: none; }
+.section-hero h1 { margin: 0; font-family: "Songti SC", "STSong", serif; font-size: clamp(50px, 7vw, 82px); font-weight: 400; letter-spacing: .24em; padding-left: .24em; color: var(--accent); text-shadow: 0 0 32px color-mix(in srgb, var(--accent), transparent 72%); }
+.section-intro { margin: 14px 0 0; color: #aab4d2; font-size: 13px; line-height: 1.9; }
+.content-orbit-nav { position: absolute; z-index: 3; left: 50%; bottom: 12%; width: min(920px, calc(100vw - 64px)); transform: translateX(-50%); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.content-orbit-nav a { display: flex; align-items: center; gap: 14px; min-height: 84px; padding: 14px 16px; text-decoration: none; border: 1px solid #aabaff22; border-radius: 16px; background: linear-gradient(140deg, #131a2dbd, #090d1c9c); backdrop-filter: blur(12px); transition: transform .3s, border-color .3s, background .3s; }
+.content-orbit-nav a:hover, .content-orbit-nav a:focus-visible, .content-orbit-nav a.is-selected { transform: translateY(-5px); border-color: color-mix(in srgb, var(--accent), transparent 45%); background: #121a2fdf; }
+.content-orb-mark { flex: 0 0 34px; height: 34px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #fff 0%, color-mix(in srgb, var(--accent), white 12%) 12%, var(--accent) 40%, color-mix(in srgb, var(--accent), black 58%) 78%); box-shadow: inset -7px -7px 12px #0008, 0 0 22px color-mix(in srgb, var(--accent), transparent 42%); }
+.content-orbit-copy { display: grid; gap: 7px; min-width: 0; }
+.content-orbit-copy strong { overflow: hidden; color: #edf1ff; font-size: 12px; font-weight: 500; line-height: 1.55; text-overflow: ellipsis; }
+.content-orbit-copy small { color: #8490b1; font-size: 10px; }
+.content-orbit-preview { position: absolute; z-index: 5; top: 47%; left: 50%; width: min(380px, calc(100vw - 40px)); transform: translate(-50%, -50%); padding: 18px 22px; border: 1px solid color-mix(in srgb, var(--accent), transparent 62%); border-radius: 18px; background: #090e1fdf; box-shadow: 0 18px 70px #0008; backdrop-filter: blur(16px); text-align: center; pointer-events: auto; }
+.content-orbit-preview span { display: block; margin-bottom: 8px; color: var(--accent); font-size: 10px; letter-spacing: .14em; }
+.content-orbit-preview strong { font-family: "Songti SC", "STSong", serif; font-size: 20px; font-weight: 400; }
+.content-orbit-preview p { margin: 10px 0 0; color: #8994b2; font-size: 11px; }
+.content-orbit-preview button { position: absolute; top: 5px; right: 9px; border: 0; background: none; color: #b8c2df; font-size: 22px; cursor: pointer; }
+.scene-fallback-status { position: absolute; z-index: 3; top: 75px; left: 50%; transform: translateX(-50%); color: #93a0c0; font-size: 11px; }
+.section-footer { bottom: 26px; justify-content: center; }
 .not-found { min-height: 100svh; display: grid; align-content: center; justify-items: center; text-align: center; padding: 24px; }
 .not-found h1 { font-size: clamp(36px, 6vw, 64px); letter-spacing: .12em; padding: 0; }
 .not-found .back-link { position: static; margin-top: 36px; }
@@ -112,18 +97,19 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .eyebrow { margin-bottom: 10px; }
   .hero h1 { font-size: clamp(52px, 14vw, 76px); }
   .hero-copy { margin-top: 12px; font-size: 12px; }
-  .home-shell > .constellation { inset: 48% 0 7%; display: grid; align-content: center; justify-items: start; gap: 5px; }
-  .constellation-link { position: relative; inset: auto; width: min(320px, 82vw); padding: 7px 12px; gap: 4px; }
+  .home-shell > .constellation { inset: 48% 0 7%; display: grid; align-content: center; justify-items: start; gap: 8px; }
+  .constellation-link { position: relative; inset: auto; width: min(320px, 82vw); padding: 11px 13px; gap: 4px; }
   .constellation-link--daily, .constellation-link--tech, .constellation-link--podcast { left: 6%; right: auto; top: auto; }
   .link-name { font-size: 21px; }
   .link-summary { font-size: 10px; }
-  .constellation-link .link-summary { display: none; }
-  .constellation-link .orbit-mark { width: 13px; height: 13px; margin: 0 0 4px 5px; }
   .site-footer { bottom: 16px; font-size: 8px; }
   .site-footer span:last-child { display: none; }
-  .section-content { margin-top: 30px; }
-  .entry-row { grid-template-columns: 1fr auto; }
-  .entry-list b { display: none; }
+  .section-hero { top: 12%; }
+  .content-orbit-nav { bottom: 8%; width: calc(100vw - 36px); grid-template-columns: 1fr; gap: 8px; }
+  .content-orbit-nav a { min-height: 59px; padding: 9px 12px; }
+  .content-orb-mark { flex-basis: 28px; height: 28px; }
+  .content-orbit-preview { top: 43%; }
+  .section-footer { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
@@ -135,25 +121,10 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .home-shell > .hero { z-index: 2; }
 .home-shell > .constellation { z-index: 3; pointer-events: none; }
 .home-shell > .constellation .constellation-link { pointer-events: auto; }
-.constellation-link.is-selected .orbit-mark { transform: scale(1.15); box-shadow: inset 0 0 20px color-mix(in srgb, var(--accent), transparent 54%), 0 0 42px color-mix(in srgb, var(--accent), transparent 52%); }
-.destination-preview { position: absolute; z-index: 5; left: 50%; top: 53%; transform: translateX(-50%); width: min(360px, calc(100vw - 40px)); padding: 17px 20px; border: 1px solid #aabaff2a; border-radius: 15px; background: #0b1022cc; backdrop-filter: blur(14px); text-align: center; }
-.destination-preview span { display: block; margin-bottom: 7px; font-size: 9px; letter-spacing: .22em; }
-.destination-preview strong { font-family: "Songti SC", "STSong", serif; font-size: 22px; font-weight: 400; letter-spacing: .2em; }
-.destination-preview p { margin: 6px 0 0; color: #a8b2cf; font-size: 11px; line-height: 1.7; }
-.butterfly-guide { position: fixed; z-index: 4; width: 156px; height: 114px; transform: translate(-50%, -50%); pointer-events: none; transition: left .65s cubic-bezier(.22,.72,.2,1), top .65s cubic-bezier(.22,.72,.2,1); filter: drop-shadow(0 0 8px #79d4a966); animation: jade-hover 5.8s ease-in-out infinite; }
-.butterfly-guide.is-flying { animation: jade-flight 1.6s cubic-bezier(.18,.72,.18,1) forwards; }
-@keyframes jade-hover { 0%, 100% { margin-top: 0; rotate: -2deg; } 50% { margin-top: -7px; rotate: 2deg; } }
-@keyframes jade-flight { 0% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 28% { transform: translate(calc(-50% + 34px), calc(-50% - 58px)) scale(.9) rotate(12deg); opacity: 1; } 76% { transform: translate(0, -22vh) scale(.62) rotate(-8deg); opacity: .9; } 100% { transform: translate(var(--flight-x), var(--flight-y)) scale(.08) rotate(22deg); opacity: 0; } }
+.constellation-link.is-selected { border-color: color-mix(in srgb, var(--accent), transparent 58%); }
 .fallback-note { position: absolute; z-index: 5; top: 70px; left: 50%; transform: translateX(-50%); padding: 8px 12px; border-radius: 99px; background: #111a2b; color: #aebbd7; font-size: 11px; }
 @media (max-width: 700px) {
   .universe .hero { top: 7%; }
-  .destination-preview { top: 35%; bottom: auto; padding: 8px 12px; }
-  .destination-preview strong { font-size: 18px; }
-  .destination-preview p { margin-top: 3px; font-size: 10px; line-height: 1.4; }
-  .ink-atmosphere { opacity: .065; }
-  .ink-calligraphy--left { left: 2%; top: 25%; font-size: 25px; }
-  .ink-calligraphy--right { right: 2%; bottom: 17%; font-size: 22px; }
-  .ink-strokes { opacity: .24; }
 }
 @media (max-width: 700px) and (max-height: 600px) {
   .hero { top: 5%; }
@@ -161,14 +132,13 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .hero-copy { margin-top: 8px; }
   .universe .hero { top: 5%; }
   .home-shell > .constellation { inset: 50% 0 7%; }
-  .destination-preview { top: 33%; }
 }
 @media (max-width: 700px) and (max-height: 520px) {
   .home-shell > .constellation { gap: 2px; }
-  .constellation-link { padding: 4px 10px; gap: 2px; }
-  .constellation-link .orbit-mark { width: 10px; height: 10px; margin-bottom: 2px; }
+  .constellation-link { padding: 7px 10px; gap: 2px; }
+  .content-orbit-nav { grid-template-columns: repeat(3, minmax(0, 1fr)); bottom: 8%; }
+  .content-orbit-nav a { min-height: 76px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .butterfly-guide { display: none; animation: none !important; }
-  .constellation-link, .butterfly-guide { transition: none !important; }
+  .constellation-link, .content-orbit-nav a { transition: none !important; }
 }

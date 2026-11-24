@@ -1,7 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import type { Section } from "../data/sections";
-import { ButterflyGuide } from "./ButterflyGuide";
 import { SceneErrorBoundary } from "./SceneErrorBoundary";
 import { RETURN_DURATION_MS, TRAVEL_DURATION_MS } from "./travelTiming";
 
@@ -23,7 +22,6 @@ export function UniverseExperience({ sections }: Props) {
     window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
   const [mobile, setMobile] = useState(false);
-  const [flightKey, setFlightKey] = useState(0);
   const timer = useRef<number | undefined>(undefined);
   const resetTimer = useRef<number | undefined>(undefined);
 
@@ -79,7 +77,6 @@ export function UniverseExperience({ sections }: Props) {
     setSelectedSlug(section.slug);
     setPreviewSlug(section.slug);
     setPhase("travel");
-    setFlightKey((value) => value + 1);
     timer.current = window.setTimeout(() => {
       timer.current = undefined;
       setPhase("arrived");
@@ -151,12 +148,6 @@ export function UniverseExperience({ sections }: Props) {
 
   const onSceneError = useCallback(() => setSceneAvailable(false), []);
   const activeSection = sections.find((section) => section.slug === previewSlug);
-  const guideTarget = activeSection?.slug === "daily"
-    ? { x: window.innerWidth * 0.26, y: window.innerHeight * 0.64 }
-    : activeSection?.slug === "tech"
-      ? { x: window.innerWidth * 0.75, y: window.innerHeight * 0.64 }
-      : { x: window.innerWidth * 0.52, y: window.innerHeight * 0.82 };
-
   return (
     <div className={"universe " + (phase === "travel" ? "is-traveling" : "") + (sceneAvailable ? "" : " scene-fallback")}>
       {sceneAvailable && !reducedMotion && (
@@ -184,18 +175,11 @@ export function UniverseExperience({ sections }: Props) {
 
       {activeSection && phase !== "idle" && (
         <aside className="destination-preview" aria-live="polite">
-          <span style={{ color: activeSection.color } as CSSProperties}>DESTINATION · {activeSection.gu}</span>
+          <span style={{ color: activeSection.color } as CSSProperties}>DESTINATION</span>
           <strong>{activeSection.name}</strong>
           <p>{activeSection.intro}</p>
         </aside>
       )}
-
-      <ButterflyGuide
-        visible={Boolean(activeSection) && sceneAvailable && !reducedMotion && !mobile}
-        flightKey={flightKey}
-        traveling={phase === "travel"}
-        target={guideTarget}
-      />
 
       {!sceneAvailable && (
         <p className="fallback-note" role="status">星海渲染暂不可用，栏目入口仍可直接访问。</p>

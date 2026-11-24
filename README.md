@@ -1,6 +1,6 @@
 # 星辰界 · Xingchen Verse
 
-杨鑫成的个人小世界：用星海呈现日常、技术与播客。
+杨鑫成的个人小世界：用一个可探索的 3D 星系呈现日常、技术与播客。
 
 ## 本地运行
 
@@ -11,7 +11,7 @@ npm run build
 npm run preview
 ```
 
-构建输出位于 `dist/`。栏目定义在 `src/data/sections.ts`，首页 3D 场景由独立 React 岛提供，栏目详情由 Astro 静态生成。
+构建输出位于 `dist/`。栏目定义在 `src/data/sections.ts`，首页和栏目详情都由 React Three Fiber 场景呈现；栏目页中的每条内容对应一个可聚焦、可交互的内容星。
 
 ## 技术与许可证
 

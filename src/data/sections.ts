@@ -1,7 +1,6 @@
 export type Section = {
   slug: string;
   name: string;
-  gu: string;
   color: string;
   position: [number, number, number];
   intro: string;
@@ -12,7 +11,6 @@ export const sections: Section[] = [
   {
     slug: "daily",
     name: "日常",
-    gu: "日月蛊",
     color: "#ffd479",
     position: [-10.5, -2.4, -18],
     intro: "一些正在发生的日子，一张图，一句当时的想法。",
@@ -25,7 +23,6 @@ export const sections: Section[] = [
   {
     slug: "tech",
     name: "技术",
-    gu: "机关蛊",
     color: "#64f0ff",
     position: [6.7, -2.3, -18],
     intro: "计算机、代码和那些从问题里长出来的小工具。",
@@ -38,7 +35,6 @@ export const sections: Section[] = [
   {
     slug: "podcast",
     name: "播客",
-    gu: "传音蛊",
     color: "#ff72cf",
     position: [-1.8, -5.7, -25],
     intro: "不定期更新，聊技术、书和最近在想的事。",
