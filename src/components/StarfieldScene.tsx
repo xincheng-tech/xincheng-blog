@@ -3,6 +3,7 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { AdditiveBlending, BufferAttribute, BufferGeometry, CanvasTexture, Color, LinearFilter, SRGBColorSpace, Vector3 } from "three";
 import type { Section } from "../data/sections";
 import { OptionalEffectsBoundary } from "./SceneErrorBoundary";
+import { RETURN_DURATION_MS, TRAVEL_DURATION_MS } from "./travelTiming";
 
 const TravelEffects = lazy(() =>
   import("./TravelEffects").then((module) => ({ default: module.TravelEffects })),
@@ -172,18 +173,55 @@ function CameraRig({ sections, selectedSlug, phase }: Pick<Props, "sections" | "
   const goal = useRef(new Vector3(0, 0, 0));
   const look = useRef(new Vector3(0, 0, -18));
   const home = useRef(new Vector3(0, 0, 0));
+  const homeLook = useRef(new Vector3(0, 0, -18));
+  const previousPhase = useRef(phase);
+  const phaseStart = useRef(0);
+  const fromPosition = useRef(new Vector3());
+  const fromLook = useRef(new Vector3(0, 0, -18));
+  const controlOne = useRef(new Vector3());
+  const controlTwo = useRef(new Vector3());
+  const pathEnd = useRef(new Vector3());
+  const pathLookEnd = useRef(new Vector3(0, 0, -18));
 
-  useFrame((_, delta) => {
+  useFrame(({ clock }, delta) => {
     const section = sections.find((item) => item.slug === selectedSlug);
-    if (phase === "travel" && section) {
-      goal.current.set(section.position[0] * 0.74, section.position[1] * 0.74, section.position[2] + 6.5);
-      look.current.set(...section.position);
+    const changed = phase !== previousPhase.current;
+    if (changed) {
+      previousPhase.current = phase;
+      phaseStart.current = clock.elapsedTime;
+      fromPosition.current.copy(camera.position);
+      fromLook.current.copy(look.current);
+
+      if (phase === "travel" && section) {
+        pathEnd.current.set(section.position[0] * 0.74, section.position[1] * 0.74, section.position[2] + 6.5);
+        pathLookEnd.current.set(...section.position);
+      } else {
+        pathEnd.current.copy(home.current);
+        pathLookEnd.current.copy(homeLook.current);
+      }
+
+      const distance = pathEnd.current.clone().sub(fromPosition.current);
+      controlOne.current.copy(fromPosition.current).addScaledVector(distance, 0.28);
+      controlOne.current.y += Math.sign(distance.y || 1) * Math.min(2.4, Math.abs(distance.x) * 0.11 + 0.7);
+      controlTwo.current.copy(pathEnd.current).addScaledVector(distance, -0.18);
+      controlTwo.current.z += phase === "travel" ? 2.2 : 1.2;
+    }
+
+    if (phase === "travel" || phase === "return") {
+      const duration = phase === "travel" ? TRAVEL_DURATION_MS : RETURN_DURATION_MS;
+      const raw = Math.min((clock.elapsedTime - phaseStart.current) * 1000 / duration, 1);
+      const eased = raw * raw * (3 - 2 * raw);
+      const inverse = 1 - eased;
+      camera.position.copy(fromPosition.current).multiplyScalar(inverse ** 3)
+        .addScaledVector(controlOne.current, 3 * inverse * inverse * eased)
+        .addScaledVector(controlTwo.current, 3 * inverse * eased * eased)
+        .addScaledVector(pathEnd.current, eased ** 3);
+      look.current.lerpVectors(fromLook.current, pathLookEnd.current, eased);
     } else {
       goal.current.copy(home.current);
-      look.current.set(0, 0, -18);
+      look.current.lerp(homeLook.current, 1 - Math.exp(-delta * 2.2));
+      camera.position.lerp(goal.current, 1 - Math.exp(-delta * 2.2));
     }
-    const factor = 1 - Math.exp(-delta * (phase === "travel" ? 2.8 : 1.6));
-    camera.position.lerp(goal.current, factor);
     camera.lookAt(look.current);
   });
 

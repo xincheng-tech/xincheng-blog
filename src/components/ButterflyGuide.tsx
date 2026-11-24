@@ -1,8 +1,10 @@
 import { useEffect, useRef } from "react";
+import type { CSSProperties } from "react";
 
 type Props = {
   visible: boolean;
   flightKey: number;
+  traveling: boolean;
   target: { x: number; y: number };
 };
 
@@ -56,11 +58,10 @@ function polyPath(ctx: CanvasRenderingContext2D, points: number[][]) {
 
 function membrane(ctx: CanvasRenderingContext2D, path: Path2D, x: number, y: number, inner: number, outer: number) {
   const gradient = ctx.createRadialGradient(x, y, inner, x, y, outer);
-  gradient.addColorStop(0, "rgba(232,255,247,.8)");
-  gradient.addColorStop(.26, "rgba(168,244,224,.66)");
-  gradient.addColorStop(.55, "rgba(126,214,226,.46)");
-  gradient.addColorStop(.8, "rgba(172,150,255,.36)");
-  gradient.addColorStop(1, "rgba(255,170,226,.26)");
+  gradient.addColorStop(0, "rgba(240,255,247,.48)");
+  gradient.addColorStop(.3, "rgba(146,226,191,.32)");
+  gradient.addColorStop(.68, "rgba(63,158,127,.2)");
+  gradient.addColorStop(1, "rgba(34,95,83,.08)");
   ctx.fillStyle = gradient;
   ctx.fill(path);
 }
@@ -69,8 +70,8 @@ function drawWingHalf(ctx: CanvasRenderingContext2D, time: number) {
   ctx.lineJoin = "round";
   ctx.lineCap = "round";
 
-  ctx.shadowColor = "rgba(110,240,220,.35)";
-  ctx.shadowBlur = 9;
+  ctx.shadowColor = "rgba(118,225,179,.22)";
+  ctx.shadowBlur = 5;
   membrane(ctx, HIND, 6, 16, 4, 76);
   ctx.shadowBlur = 0;
   ctx.save();
@@ -83,14 +84,14 @@ function drawWingHalf(ctx: CanvasRenderingContext2D, time: number) {
   ctx.fill(HIND);
   ctx.restore();
 
-  for (const vein of VEINS_H) veinPath(ctx, vein, 2.6, "rgba(150,240,220,.13)");
-  for (const vein of VEINS_H) veinPath(ctx, vein, 1.25, "rgba(12,62,56,.66)");
+  for (const vein of VEINS_H) veinPath(ctx, vein, 2, "rgba(184,248,214,.25)");
+  for (const vein of VEINS_H) veinPath(ctx, vein, 1, "rgba(24,84,68,.62)");
   polyPath(ctx, CELL_H);
   ctx.lineWidth = .9;
-  ctx.strokeStyle = "rgba(18,74,68,.45)";
+  ctx.strokeStyle = "rgba(31,100,76,.35)";
   ctx.stroke();
   ctx.lineWidth = 1.4;
-  ctx.strokeStyle = "rgba(220,255,246,.72)";
+  ctx.strokeStyle = "rgba(218,255,233,.76)";
   ctx.stroke(HIND);
 
   ctx.save();
@@ -101,8 +102,8 @@ function drawWingHalf(ctx: CanvasRenderingContext2D, time: number) {
   ctx.fill(FORE);
   ctx.restore();
 
-  ctx.shadowColor = "rgba(130,250,232,.42)";
-  ctx.shadowBlur = 10;
+  ctx.shadowColor = "rgba(118,225,179,.28)";
+  ctx.shadowBlur = 6;
   membrane(ctx, FORE, 6, -6, 4, 92);
   ctx.shadowBlur = 0;
   ctx.save();
@@ -115,32 +116,32 @@ function drawWingHalf(ctx: CanvasRenderingContext2D, time: number) {
   ctx.fill(FORE);
   ctx.restore();
 
-  for (const vein of VEINS_F) veinPath(ctx, vein, 2.8, "rgba(150,240,220,.14)");
-  for (const vein of VEINS_F) veinPath(ctx, vein, 1.35, "rgba(10,58,52,.7)");
+  for (const vein of VEINS_F) veinPath(ctx, vein, 2.2, "rgba(194,255,223,.28)");
+  for (const vein of VEINS_F) veinPath(ctx, vein, 1.05, "rgba(19,77,59,.64)");
   polyPath(ctx, CELL_F);
   ctx.lineWidth = .95;
-  ctx.strokeStyle = "rgba(16,70,64,.5)";
+  ctx.strokeStyle = "rgba(26,95,67,.38)";
   ctx.stroke();
   ctx.lineWidth = 1.5;
-  ctx.strokeStyle = "rgba(228,255,249,.78)";
+  ctx.strokeStyle = "rgba(230,255,237,.84)";
   ctx.stroke(FORE);
 
   const edge = ctx.createLinearGradient(12, -30, 76, -50);
   edge.addColorStop(0, "rgba(255,255,255,0)");
-  edge.addColorStop(.5, "rgba(255,255,255,.5)");
+  edge.addColorStop(.5, "rgba(231,255,237,.32)");
   edge.addColorStop(1, "rgba(255,255,255,0)");
   ctx.strokeStyle = edge;
-  ctx.lineWidth = 2.2;
+  ctx.lineWidth = 1.5;
   ctx.beginPath();
   ctx.moveTo(14, -30);
   ctx.quadraticCurveTo(46, -52, 74, -48);
   ctx.stroke();
 
-  ctx.fillStyle = "rgba(255,255,255,.13)";
+  ctx.fillStyle = "rgba(221,255,231,.18)";
   ctx.beginPath();
   ctx.ellipse(70, -44, 6.2, 4, -.5, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "rgba(255,175,235,.14)";
+  ctx.fillStyle = "rgba(212,238,198,.12)";
   ctx.beginPath();
   ctx.ellipse(64, -29, 4.2, 2.8, -.4, 0, Math.PI * 2);
   ctx.fill();
@@ -149,8 +150,8 @@ function drawWingHalf(ctx: CanvasRenderingContext2D, time: number) {
   const sheen = ctx.createLinearGradient(-20, -60, 96, 70);
   sheen.addColorStop(0, "rgba(255,255,255,0)");
   sheen.addColorStop(clamp(phase - .3, .001, .994), "rgba(255,255,255,0)");
-  sheen.addColorStop(clamp(phase, .006, .995), "rgba(196,255,242,.26)");
-  sheen.addColorStop(clamp(phase + .14, .007, .996), "rgba(255,214,246,.18)");
+  sheen.addColorStop(clamp(phase, .006, .995), "rgba(225,255,232,.2)");
+  sheen.addColorStop(clamp(phase + .14, .007, .996), "rgba(176,236,194,.12)");
   sheen.addColorStop(clamp(phase + .3, .008, .997), "rgba(255,255,255,0)");
   sheen.addColorStop(1, "rgba(255,255,255,0)");
   ctx.save();
@@ -166,11 +167,11 @@ function drawWingHalf(ctx: CanvasRenderingContext2D, time: number) {
 }
 
 function drawBody(ctx: CanvasRenderingContext2D, time: number) {
-  ctx.shadowColor = "rgba(255,222,160,.45)";
-  ctx.shadowBlur = 10;
+  ctx.shadowColor = "rgba(222,192,124,.24)";
+  ctx.shadowBlur = 6;
   const body = ctx.createLinearGradient(0, 6, 0, 46);
-  body.addColorStop(0, "rgba(252,255,252,.98)");
-  body.addColorStop(1, "rgba(246,196,116,.96)");
+  body.addColorStop(0, "rgba(241,255,241,.96)");
+  body.addColorStop(1, "rgba(176,201,137,.96)");
   ctx.fillStyle = body;
   ctx.beginPath();
   ctx.moveTo(-5, 6);
@@ -224,7 +225,7 @@ function drawBody(ctx: CanvasRenderingContext2D, time: number) {
   ctx.fill();
 }
 
-export function ButterflyGuide({ visible, flightKey, target }: Props) {
+export function ButterflyGuide({ visible, flightKey, traveling, target }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -244,7 +245,7 @@ export function ButterflyGuide({ visible, flightKey, target }: Props) {
     let time = 0;
     let flapPhase = .8;
     let particles: Particle[] = [];
-    const emitUntil = flightKey > 0 ? performance.now() + 950 : 0;
+    const emitUntil = flightKey > 0 ? performance.now() + 520 : 0;
 
     const draw = (now: number) => {
       const delta = Math.min((now - previous) / 1000, .04);
@@ -253,8 +254,8 @@ export function ButterflyGuide({ visible, flightKey, target }: Props) {
       flapPhase += delta * (flightKey > 0 ? 15 : 8);
       ctx.clearRect(0, 0, width, height);
 
-      if (now < emitUntil && Math.random() > .48) {
-        particles.push({ x: width / 2 + (Math.random() - .5) * 12, y: height / 2 + 42, life: 1, radius: 2 + Math.random() * 2.3 });
+      if (now < emitUntil && particles.length < 12 && Math.random() > .66) {
+        particles.push({ x: width / 2 + (Math.random() - .5) * 10, y: height / 2 + 38, life: 1, radius: 1 + Math.random() * 1.3 });
       }
       particles = particles.filter((particle) => particle.life > 0);
       ctx.save();
@@ -263,18 +264,18 @@ export function ButterflyGuide({ visible, flightKey, target }: Props) {
         particle.life -= delta * 1.25;
         particle.y += delta * 10;
         const glow = ctx.createRadialGradient(particle.x, particle.y, 0, particle.x, particle.y, particle.radius * 5);
-        glow.addColorStop(0, "rgba(230,255,220,.8)");
-        glow.addColorStop(1, "rgba(100,235,220,0)");
-        ctx.globalAlpha = particle.life * .48;
+        glow.addColorStop(0, "rgba(224,255,221,.56)");
+        glow.addColorStop(1, "rgba(109,204,153,0)");
+        ctx.globalAlpha = particle.life * .32;
         ctx.fillStyle = glow;
         ctx.fillRect(particle.x - particle.radius * 5, particle.y - particle.radius * 5, particle.radius * 10, particle.radius * 10);
       }
 
-      const halo = ctx.createRadialGradient(width / 2, height / 2, 4, width / 2, height / 2, 88);
-      halo.addColorStop(0, "rgba(230,255,220,.42)");
-      halo.addColorStop(.42, "rgba(100,245,220,.16)");
+      const halo = ctx.createRadialGradient(width / 2, height / 2, 2, width / 2, height / 2, 62);
+      halo.addColorStop(0, "rgba(224,255,221,.18)");
+      halo.addColorStop(.5, "rgba(100,190,144,.08)");
       halo.addColorStop(1, "rgba(70,150,255,0)");
-      ctx.globalAlpha = .75;
+      ctx.globalAlpha = .58;
       ctx.fillStyle = halo;
       ctx.beginPath();
       ctx.arc(width / 2, height / 2, 88, 0, Math.PI * 2);
@@ -303,8 +304,13 @@ export function ButterflyGuide({ visible, flightKey, target }: Props) {
   return (
     <canvas
       ref={canvasRef}
-      className="butterfly-guide"
-      style={{ left: target.x, top: target.y }}
+      className={"butterfly-guide" + (traveling ? " is-flying" : "")}
+      style={{
+        left: target.x,
+        top: target.y,
+        "--flight-x": `calc(50vw - ${target.x}px)`,
+        "--flight-y": `calc(50vh - ${target.y}px)`,
+      } as CSSProperties}
       aria-hidden="true"
     />
   );

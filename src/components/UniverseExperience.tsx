@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 import type { Section } from "../data/sections";
 import { ButterflyGuide } from "./ButterflyGuide";
 import { SceneErrorBoundary } from "./SceneErrorBoundary";
+import { RETURN_DURATION_MS, TRAVEL_DURATION_MS } from "./travelTiming";
 
 const StarfieldScene = lazy(() =>
   import("./StarfieldScene").then((module) => ({ default: module.StarfieldScene })),
@@ -83,7 +84,7 @@ export function UniverseExperience({ sections }: Props) {
       timer.current = undefined;
       setPhase("arrived");
       window.location.assign("/" + section.slug + "/");
-    }, 1500);
+    }, TRAVEL_DURATION_MS);
   }, [phase, reducedMotion, sceneAvailable, sceneReady]);
 
   useEffect(() => {
@@ -142,7 +143,7 @@ export function UniverseExperience({ sections }: Props) {
       resetTimer.current = window.setTimeout(() => {
         resetTimer.current = undefined;
         setPhase("idle");
-      }, reducedMotion ? 0 : 650);
+      }, reducedMotion ? 0 : RETURN_DURATION_MS);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -192,6 +193,7 @@ export function UniverseExperience({ sections }: Props) {
       <ButterflyGuide
         visible={Boolean(activeSection) && sceneAvailable && !reducedMotion && !mobile}
         flightKey={flightKey}
+        traveling={phase === "travel"}
         target={guideTarget}
       />
 

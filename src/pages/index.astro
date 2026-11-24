@@ -6,6 +6,14 @@ import { UniverseExperience } from "../components/UniverseExperience";
 <SiteLayout>
   <main class="home-shell">
     <div class="sky-wash" aria-hidden="true"></div>
+    <div class="ink-atmosphere" aria-hidden="true">
+      <span class="ink-calligraphy ink-calligraphy--left">逍遥</span>
+      <span class="ink-calligraphy ink-calligraphy--right">定仙游</span>
+      <svg class="ink-strokes" viewBox="0 0 1000 700" preserveAspectRatio="none">
+        <path d="M28 106 C74 124 96 152 142 198 C104 186 75 187 39 205 C88 226 117 244 153 282" />
+        <path d="M858 435 C901 402 932 380 981 371 C949 418 922 461 887 521 C926 501 950 496 990 500" />
+      </svg>
+    </div>
     <UniverseExperience client:only="react" sections={sections} />
 
     <header class="site-header">
