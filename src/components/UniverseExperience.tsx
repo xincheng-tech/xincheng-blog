@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import type { Section } from "../data/sections";
 import { sitePath } from "../sitePath";
-import { planetSurfaces } from "../data/planetSurfaces";
+import { sectionTextureFiles, solarTexturePath } from "../data/solarTextures";
 import { rememberArrival } from "../travelHandoff";
 import { SceneErrorBoundary } from "./SceneErrorBoundary";
 
@@ -80,11 +80,11 @@ export function UniverseExperience({ sections }: Props) {
     document.head.append(hint);
     const section = sections.find((entry) => entry.slug === slug);
     if (!section) return;
-    const textures = new Set([section.surface, ...section.items.map((item) => item.surface)]);
-    for (const surface of textures) {
+    for (const file of sectionTextureFiles(section)) {
       const image = new Image();
+      image.crossOrigin = "anonymous";
       image.fetchPriority = "low";
-      image.src = sitePath("textures/solar-system/" + planetSurfaces[surface].file + ".webp");
+      image.src = solarTexturePath(file);
     }
   }, [sections]);
 

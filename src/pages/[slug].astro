@@ -4,6 +4,7 @@ import { sections } from "../data/sections";
 import { planetSurfaces } from "../data/planetSurfaces";
 import { SectionUniverseExperience } from "../components/SectionUniverseExperience";
 import { sitePath } from "../sitePath";
+import { sectionTextureFiles, solarTexturePath } from "../data/solarTextures";
 
 export function getStaticPaths() {
   return sections.map((section) => ({
@@ -15,6 +16,11 @@ export function getStaticPaths() {
 const { section } = Astro.props;
 ---
 <SiteLayout title={section.name + " · 星辰界"} description={section.intro}>
+  <Fragment slot="head">
+    {sectionTextureFiles(section).map((file) => (
+      <link rel="preload" as="image" type="image/webp" href={solarTexturePath(file)} crossorigin="anonymous" />
+    ))}
+  </Fragment>
   <main class="section-page section-galaxy" style={"--accent:" + section.color}>
     <div class="sky-wash" aria-hidden="true"></div>
     <SectionUniverseExperience client:only="react" section={section} />

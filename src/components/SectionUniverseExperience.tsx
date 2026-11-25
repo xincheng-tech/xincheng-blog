@@ -1,19 +1,19 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Vector3 } from "three";
+import type { Texture } from "three";
 import type { Section } from "../data/sections";
 import type { PlanetSurface } from "../data/planetSurfaces";
 import { planetSurfaces } from "../data/planetSurfaces";
+import { sectionTextureFiles } from "../data/solarTextures";
 import { SolarSky } from "./SolarSky";
 import { SceneErrorBoundary } from "./SceneErrorBoundary";
-import { PlanetBody, useSolarTexture } from "./PlanetBody";
+import { PlanetBody, useSolarTextures } from "./PlanetBody";
 import { revealArrival } from "../travelHandoff";
 
 type Props = { section: Section };
 
-function RevealAfterSceneFrame({ surface }: { surface: PlanetSurface }) {
-  useSolarTexture("milky-way");
-  useSolarTexture(planetSurfaces[surface].file);
+function RevealAfterSceneFrame() {
   const frame = useRef<number | null>(null);
   useFrame(() => {
     if (frame.current === null) frame.current = requestAnimationFrame(revealArrival);
@@ -41,6 +41,8 @@ const sectionLight: [number, number, number] = [-11, 6, -9];
 function ContentPlanet({
   position,
   surface,
+  map,
+  ringMap,
   mobile,
   selected,
   reducedMotion,
@@ -48,6 +50,8 @@ function ContentPlanet({
 }: {
   position: [number, number, number];
   surface: PlanetSurface;
+  map: Texture;
+  ringMap?: Texture;
   mobile: boolean;
   selected: boolean;
   reducedMotion: boolean;
@@ -57,6 +61,8 @@ function ContentPlanet({
     <group position={position}>
       <PlanetBody
         surface={surface}
+        map={map}
+        ringMap={ringMap}
         radius={mobile ? 0.52 : 0.72}
         emphasis={selected ? 1.27 : 1}
         mobile={mobile}
@@ -112,6 +118,10 @@ function SectionSystem({ section, mobile, selectedIndex, reducedMotion, choose }
   choose: (index: number | null) => void;
 }) {
   const { width, height } = useThree((state) => state.size);
+  const files = useMemo(() => sectionTextureFiles(section), [section]);
+  const textures = useSolarTextures(files);
+  const textureFor = (file: string) => textures[files.indexOf(file)];
+  const ringMap = textureFor("saturn-ring");
   const horizontalScale = Math.min(1, width / Math.max(height, 1) / (mobile ? 0.46 : 1.31));
   const slots = mobile ? mobilePositions : desktopPositions;
   const positions = useMemo(() => section.items.map((_, index): [number, number, number] => {
@@ -121,19 +131,22 @@ function SectionSystem({ section, mobile, selectedIndex, reducedMotion, choose }
 
   return (
     <>
-      <SolarSky />
+      <SolarSky map={textureFor("milky-way")} />
       <ambientLight intensity={0.55} />
       <pointLight position={sectionLight} intensity={2.75} decay={0} color="#fff3dc" />
       <group position={[0, 0, -19]}>
-        <PlanetBody surface={section.surface} radius={mobile ? 1.45 : 1.9}
+        <PlanetBody surface={section.surface} map={textureFor(planetSurfaces[section.surface].file)}
+          ringMap={ringMap} radius={mobile ? 1.45 : 1.9}
           mobile={mobile} animate={!reducedMotion} />
       </group>
       {section.items.map((item, index) => (
         <ContentPlanet key={item.title} position={positions[index]} surface={item.surface}
+          map={textureFor(planetSurfaces[item.surface].file)} ringMap={ringMap}
           mobile={mobile} selected={selectedIndex === index}
           reducedMotion={reducedMotion} onSelect={() => choose(index)} />
       ))}
       <SectionCamera positions={positions} selectedIndex={selectedIndex} reducedMotion={reducedMotion} />
+      <RevealAfterSceneFrame />
     </>
   );
 }
@@ -143,7 +156,6 @@ export function SectionUniverseExperience({ section }: Props) {
   const [mobile, setMobile] = useState(() => window.matchMedia("(max-width: 700px)").matches);
   const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   const [sceneAvailable, setSceneAvailable] = useState(true);
-  const [landing] = useState(() => document.documentElement.hasAttribute("data-travel-arrival"));
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 700px)");
@@ -213,11 +225,10 @@ export function SectionUniverseExperience({ section }: Props) {
             dpr={mobile ? [1, 1.2] : [1, 1.5]}
             gl={{ alpha: true, antialias: !mobile, powerPreference: "low-power" }}
           >
-            <SectionSystem section={section} mobile={mobile} selectedIndex={selectedIndex}
-              reducedMotion={reducedMotion} choose={choose} />
-            {landing && (
-              <Suspense fallback={null}><RevealAfterSceneFrame surface={section.surface} /></Suspense>
-            )}
+            <Suspense fallback={null}>
+              <SectionSystem section={section} mobile={mobile} selectedIndex={selectedIndex}
+                reducedMotion={reducedMotion} choose={choose} />
+            </Suspense>
           </Canvas>
         </SceneErrorBoundary>
       )}

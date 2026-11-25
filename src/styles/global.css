@@ -32,6 +32,10 @@ body { background: var(--night); color: var(--ink); }
 }
 body:has(.is-arriving) > .travel-veil { opacity: 1; transition-duration: 180ms; }
 html[data-travel-arrival] .travel-veil { opacity: 1; transition: none; }
+.travel-veil span { display: none; color: #aab4cb; font-size: 12px; letter-spacing: .12em; }
+html[data-travel-arrival] .travel-veil span { display: block; animation: travel-loading 200ms 650ms both; }
+.travel-veil { display: grid; place-items: center; }
+@keyframes travel-loading { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .travel-veil { display: none; } }
 a { color: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }

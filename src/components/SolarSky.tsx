@@ -1,9 +1,13 @@
 import { Suspense } from "react";
 import { BackSide } from "three";
+import type { Texture } from "three";
 import { useSolarTexture } from "./PlanetBody";
 
-function MilkyWay() {
-  const map = useSolarTexture("milky-way");
+function LoadMilkyWay() {
+  return <MilkyWay map={useSolarTexture("milky-way")} />;
+}
+
+function MilkyWay({ map }: { map: Texture }) {
   return (
     <mesh rotation={[0.19, 1.3, -0.29]}>
       <sphereGeometry args={[86, 40, 24]} />
@@ -12,6 +16,6 @@ function MilkyWay() {
   );
 }
 
-export function SolarSky() {
-  return <Suspense fallback={null}><MilkyWay /></Suspense>;
+export function SolarSky({ map }: { map?: Texture }) {
+  return map ? <MilkyWay map={map} /> : <Suspense fallback={null}><LoadMilkyWay /></Suspense>;
 }

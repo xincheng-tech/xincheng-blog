@@ -2,13 +2,12 @@ import { Suspense, useEffect, useMemo, useRef } from "react";
 import { useFrame, useLoader } from "@react-three/fiber";
 import type { ThreeElements } from "@react-three/fiber";
 import { DoubleSide, RingGeometry, SRGBColorSpace, TextureLoader } from "three";
-import type { Group, Mesh } from "three";
+import type { Group, Mesh, Texture } from "three";
 import { planetSurfaces } from "../data/planetSurfaces";
 import type { PlanetSurface } from "../data/planetSurfaces";
-import { sitePath } from "../sitePath";
+import { solarTexturePath } from "../data/solarTextures";
 
-export function useSolarTexture(filename: string) {
-  const texture = useLoader(TextureLoader, sitePath("textures/solar-system/" + filename + ".webp"));
+function configureTexture(texture: Texture) {
   if (texture.colorSpace !== SRGBColorSpace) {
     texture.colorSpace = SRGBColorSpace;
     texture.anisotropy = 4;
@@ -17,13 +16,20 @@ export function useSolarTexture(filename: string) {
   return texture;
 }
 
+export function useSolarTexture(filename: string) {
+  return configureTexture(useLoader(TextureLoader, solarTexturePath(filename)));
+}
+
+export function useSolarTextures(files: string[]) {
+  return useLoader(TextureLoader, files.map(solarTexturePath)).map(configureTexture);
+}
+
 function PlanetMap({ file }: { file: string }) {
   const texture = useSolarTexture(file);
   return <meshStandardMaterial map={texture} roughness={1} />;
 }
 
-function SaturnRings() {
-  const texture = useSolarTexture("saturn-ring");
+function SaturnRings({ texture }: { texture: Texture }) {
   const geometry = useMemo(() => {
     const inner = 1.3;
     const outer = 2.25;
@@ -44,8 +50,14 @@ function SaturnRings() {
   );
 }
 
-export function PlanetBody({ surface, radius, emphasis = 1, animate = true, mobile, ...events }: {
+function LoadSaturnRings() {
+  return <SaturnRings texture={useSolarTexture("saturn-ring")} />;
+}
+
+export function PlanetBody({ surface, map, ringMap, radius, emphasis = 1, animate = true, mobile, ...events }: {
   surface: PlanetSurface;
+  map?: Texture;
+  ringMap?: Texture;
   radius: number;
   emphasis?: number;
   animate?: boolean;
@@ -68,11 +80,15 @@ export function PlanetBody({ surface, radius, emphasis = 1, animate = true, mobi
       <group ref={planet}>
         <mesh ref={body} {...events}>
           <sphereGeometry args={[1, mobile ? 32 : 48, mobile ? 24 : 32]} />
-          <Suspense fallback={<meshStandardMaterial color={color} roughness={1} />}>
-            <PlanetMap file={file} />
-          </Suspense>
+          {map ? <meshStandardMaterial map={map} roughness={1} /> : (
+            <Suspense fallback={<meshStandardMaterial color={color} roughness={1} />}>
+              <PlanetMap file={file} />
+            </Suspense>
+          )}
         </mesh>
-        {surface === "saturn" && <Suspense fallback={null}><SaturnRings /></Suspense>}
+        {surface === "saturn" && (ringMap ? <SaturnRings texture={ringMap} /> : (
+          <Suspense fallback={null}><LoadSaturnRings /></Suspense>
+        ))}
       </group>
     </group>
   );

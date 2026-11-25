@@ -30,14 +30,15 @@ const {
           const { path, expires } = JSON.parse(value);
           if (path === location.pathname && Date.now() < expires) {
             document.documentElement.dataset.travelArrival = "";
-            window.setTimeout(() => delete document.documentElement.dataset.travelArrival, 1500);
+            window.setTimeout(() => delete document.documentElement.dataset.travelArrival, 5000);
           }
         }
       } catch {}
     </script>
+    <slot name="head" />
   </head>
   <body>
     <slot />
-    <div class="travel-veil" aria-hidden="true"></div>
+    <div class="travel-veil" aria-hidden="true"><span>正在载入星球影像</span></div>
   </body>
 </html>
