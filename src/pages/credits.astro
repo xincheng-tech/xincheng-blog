@@ -1,0 +1,14 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+import { sitePath } from "../sitePath";
+---
+<SiteLayout title="影像来源 · 星辰界">
+  <main class="credits-page">
+    <a href={sitePath()}>← 返回太阳系</a>
+    <h1>影像来源</h1>
+    <p>行星、月球、太阳和土星环贴图来自 <a href="https://www.solarsystemscope.com/textures/">Solar System Scope</a>。</p>
+    <p>银河全景 <a href="https://www.eso.org/public/images/eso0932a/">The Milky Way panorama</a> 摄影署名为 ESO/S. Brunier。</p>
+    <p>以上素材按 <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> 授权使用，已缩小尺寸并转为 WebP，场景中的光照由网站渲染。</p>
+    <p>为便于浏览，天体尺寸、距离和位置经过调整。</p>
+  </main>
+</SiteLayout>

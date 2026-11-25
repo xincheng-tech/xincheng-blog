@@ -47,10 +47,6 @@ export function UniverseExperience({ sections }: Props) {
     };
   }, []);
 
-  useEffect(() => {
-    if (reducedMotion) setSceneReady(false);
-  }, [reducedMotion]);
-
   const arrive = useCallback(() => {
     if (!destination.current) return;
     const slug = destination.current;
@@ -132,7 +128,7 @@ export function UniverseExperience({ sections }: Props) {
   const onReturn = useCallback(() => setPhase("idle"), []);
   return (
     <div className={"universe " + (phase === "travel" || phase === "arrived" ? "is-traveling" : "") + (sceneAvailable ? "" : " scene-fallback")}>
-      {sceneAvailable && !reducedMotion && (
+      {sceneAvailable && (
         <SceneErrorBoundary onError={onSceneError}>
           <Suspense fallback={null}>
             <div className="scene-layer" aria-hidden="true">

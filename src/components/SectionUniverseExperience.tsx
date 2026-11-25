@@ -3,9 +3,9 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Vector3 } from "three";
 import type { Section } from "../data/sections";
 import type { PlanetSurface } from "../data/planetSurfaces";
-import { GalaxyBackdrop } from "./StarfieldScene";
+import { SolarSky } from "./SolarSky";
 import { SceneErrorBoundary } from "./SceneErrorBoundary";
-import { PlanetBody, surfaceFor } from "./PlanetBody";
+import { PlanetBody } from "./PlanetBody";
 
 type Props = { section: Section };
 
@@ -26,7 +26,6 @@ const sectionLight: [number, number, number] = [-11, 6, -9];
 function ContentPlanet({
   position,
   surface,
-  index,
   mobile,
   selected,
   reducedMotion,
@@ -34,7 +33,6 @@ function ContentPlanet({
 }: {
   position: [number, number, number];
   surface: PlanetSurface;
-  index: number;
   mobile: boolean;
   selected: boolean;
   reducedMotion: boolean;
@@ -44,11 +42,8 @@ function ContentPlanet({
     <group position={position}>
       <PlanetBody
         surface={surface}
-        seed={index + 4}
-        light={sectionLight}
         radius={mobile ? 0.52 : 0.72}
         emphasis={selected ? 1.27 : 1}
-        ring={surface === "amber"}
         mobile={mobile}
         animate={!reducedMotion}
         onPointerOver={(event) => {
@@ -111,15 +106,16 @@ function SectionSystem({ section, mobile, selectedIndex, reducedMotion, choose }
 
   return (
     <>
-      <GalaxyBackdrop mobile={mobile} animate={!reducedMotion} />
+      <SolarSky />
+      <ambientLight intensity={0.55} />
+      <pointLight position={sectionLight} intensity={2.75} decay={0} color="#fff3dc" />
       <group position={[0, 0, -19]}>
-        <PlanetBody surface={surfaceFor(section.slug)} light={sectionLight}
-          radius={mobile ? 1.45 : 1.9} mobile={mobile} animate={!reducedMotion}
-          ring={section.slug === "podcast"} />
+        <PlanetBody surface={section.surface} radius={mobile ? 1.45 : 1.9}
+          mobile={mobile} animate={!reducedMotion} />
       </group>
       {section.items.map((item, index) => (
         <ContentPlanet key={item.title} position={positions[index]} surface={item.surface}
-          index={index} mobile={mobile} selected={selectedIndex === index}
+          mobile={mobile} selected={selectedIndex === index}
           reducedMotion={reducedMotion} onSelect={() => choose(index)} />
       ))}
       <SectionCamera positions={positions} selectedIndex={selectedIndex} reducedMotion={reducedMotion} />

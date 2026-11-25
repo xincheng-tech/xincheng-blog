@@ -1,6 +1,7 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
 import { sections } from "../data/sections";
+import { planetSurfaces } from "../data/planetSurfaces";
 import { UniverseExperience } from "../components/UniverseExperience";
 import { sitePath } from "../sitePath";
 ---
@@ -15,9 +16,9 @@ import { sitePath } from "../sitePath";
     </header>
 
     <section class="hero" aria-labelledby="site-title">
-      <p class="eyebrow">GALAXY · 01</p>
+      <p class="eyebrow">太阳系 · SOLAR SYSTEM</p>
       <h1 id="site-title">星辰界</h1>
-      <p class="hero-copy">三颗行星，三段旅程。<br />选择一颗星，进入它的世界。</p>
+      <p class="hero-copy">选择地球、火星或土星，进入对应栏目。</p>
     </section>
 
     <nav class="constellation" aria-label="栏目星辰">
@@ -27,9 +28,9 @@ import { sitePath } from "../sitePath";
           href={sitePath(section.slug + "/")}
           data-slug={section.slug}
           style={"--accent:" + section.color}
-          aria-label={"前往" + section.name + "星球：" + section.intro}
+          aria-label={planetSurfaces[section.surface].name + " · " + section.name + "：" + section.intro}
         >
-          <span class="link-name">{section.name}</span>
+          <span class="link-name">{planetSurfaces[section.surface].name} · {section.name}</span>
           <span class="link-summary">{section.intro}</span>
         </a>
       ))}
@@ -37,7 +38,7 @@ import { sitePath } from "../sitePath";
 
     <footer class="site-footer">
       <span>杨鑫成 · PERSONAL UNIVERSE</span>
-      <span>选择行星，开始星际漫游</span>
+      <a class="art-credit-link" href={sitePath("credits/")}>影像来源</a>
     </footer>
   </main>
 </SiteLayout>

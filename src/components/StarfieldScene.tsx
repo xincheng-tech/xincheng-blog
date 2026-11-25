@@ -1,11 +1,32 @@
-import { useEffect, useMemo, useRef } from "react";
+import { Suspense, useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { AdditiveBlending, BufferAttribute, BufferGeometry, CanvasTexture, Color, LinearFilter, SRGBColorSpace, Vector3 } from "three";
+import { AdditiveBlending, BufferGeometry, CanvasTexture, LinearFilter, SRGBColorSpace, Vector3 } from "three";
+import type { PlanetSurface } from "../data/planetSurfaces";
 import type { Section } from "../data/sections";
-import { mainLight, PlanetBody, surfaceFor } from "./PlanetBody";
+import { PlanetBody, useSolarTexture } from "./PlanetBody";
+import { SolarSky } from "./SolarSky";
 import { RETURN_DURATION_MS, TRAVEL_DURATION_MS } from "./travelTiming";
 
 type Phase = "idle" | "travel" | "arrived" | "return";
+const mainLight: Section["position"] = [-2.8, 0.4, -23];
+const orbitTilt = 0.4;
+
+const overviewBodies: {
+  surface: PlanetSurface;
+  desktop: [number, number];
+  mobile: [number, number];
+  radius: number;
+}[] = [
+  { surface: "mercury", desktop: [-4.3, -21.5], mobile: [-1.3, -22], radius: 0.23 },
+  { surface: "venus", desktop: [0.15, -20.9], mobile: [0.05, -21], radius: 0.43 },
+  { surface: "jupiter", desktop: [7.25, -26.5], mobile: [3.5, -25.8], radius: 0.93 },
+  { surface: "uranus", desktop: [11.3, -28], mobile: [-3.8, -32.9], radius: 0.47 },
+  { surface: "neptune", desktop: [-15.9, -35.5], mobile: [3.2, -33.5], radius: 0.45 },
+];
+
+function orbitPosition(x: number, z: number): Section["position"] {
+  return [x, mainLight[1] - (z - mainLight[2]) * orbitTilt, z];
+}
 
 type Props = {
   sections: Section[];
@@ -19,41 +40,6 @@ type Props = {
   onContextLost: () => void;
   onReady: () => void;
 };
-
-function random(seed: number) {
-  let value = seed >>> 0;
-  return () => {
-    value = (value * 1664525 + 1013904223) >>> 0;
-    return value / 4294967296;
-  };
-}
-
-function makeGalaxy(count: number, seed: number, radius: number, depth: number, depthSpread: number) {
-  const rand = random(seed);
-  const positions = new Float32Array(count * 3);
-  const colors = new Float32Array(count * 3);
-  const palette = ["#abbce2", "#8e94be", "#ffdeae", "#d6d8ea"].map((color) => new Color(color));
-
-  for (let i = 0; i < count; i += 1) {
-    const arm = i % 4;
-    const r = Math.pow(rand(), 1.16) * radius;
-    const angle = (arm * Math.PI) / 2 + r * 0.14 + (rand() - 0.5) * (0.36 + r * 0.009);
-    const index = i * 3;
-    const diskY = Math.sin(angle) * r;
-    positions[index] = Math.cos(angle) * r;
-    positions[index + 1] = diskY * 0.46 + (rand() - 0.5) * 1.4;
-    positions[index + 2] = depth + diskY * 0.63 + (rand() - 0.5) * depthSpread;
-    const color = palette[Math.floor(rand() * palette.length)];
-    colors[index] = color.r;
-    colors[index + 1] = color.g;
-    colors[index + 2] = color.b;
-  }
-
-  const geometry = new BufferGeometry();
-  geometry.setAttribute("position", new BufferAttribute(positions, 3));
-  geometry.setAttribute("color", new BufferAttribute(colors, 3));
-  return geometry;
-}
 
 function makePointTexture() {
   const canvas = document.createElement("canvas");
@@ -74,74 +60,25 @@ function makePointTexture() {
   return texture;
 }
 
-function Galaxy({ mobile }: { mobile: boolean }) {
-  const geometry = useMemo(() => makeGalaxy(mobile ? 3500 : 10500, 76132, 33, -47, 5), [mobile]);
-  const texture = useMemo(makePointTexture, []);
-  useEffect(() => () => geometry.dispose(), [geometry]);
-  useEffect(() => () => texture?.dispose(), [texture]);
-  return (
-    <points geometry={geometry} position={[0, 0, -3]} rotation={[0, 0, -0.28]}>
-      <pointsMaterial
-        size={mobile ? 0.21 : 0.15}
-        sizeAttenuation
-        transparent
-        opacity={0.86}
-        vertexColors
-        map={texture ?? undefined}
-        alphaTest={0.015}
-        blending={AdditiveBlending}
-        depthWrite={false}
-      />
-    </points>
-  );
+function SunMap() {
+  const map = useSolarTexture("sun");
+  return <meshBasicMaterial map={map} toneMapped={false} />;
 }
 
-function Dust({ mobile, animate = true }: { mobile: boolean; animate?: boolean }) {
-  const points = useRef<import("three").Points>(null);
-  const geometry = useMemo(() => {
-    const rand = random(9917);
-    const positions = new Float32Array((mobile ? 600 : 1700) * 3);
-    for (let i = 0; i < positions.length; i += 3) {
-      positions[i] = (rand() - 0.5) * 104;
-      positions[i + 1] = (rand() - 0.5) * 65;
-      positions[i + 2] = -14 - rand() * 85;
-    }
-    return new BufferGeometry().setAttribute("position", new BufferAttribute(positions, 3));
-  }, [mobile]);
-  const texture = useMemo(makePointTexture, []);
-  useEffect(() => () => geometry.dispose(), [geometry]);
-  useEffect(() => () => texture?.dispose(), [texture]);
-  useFrame((_, delta) => {
-    if (animate && points.current) points.current.rotation.z += delta * 0.003;
-  });
-  return (
-    <points ref={points} geometry={geometry}>
-      <pointsMaterial
-        size={mobile ? 0.24 : 0.19}
-        color="#b7ccff"
-        map={texture ?? undefined}
-        alphaTest={0.015}
-        transparent
-        opacity={0.54}
-        blending={AdditiveBlending}
-        depthWrite={false}
-      />
-    </points>
-  );
-}
-
-function SystemStar() {
+function Sun() {
   const texture = useMemo(makePointTexture, []);
   useEffect(() => () => texture?.dispose(), [texture]);
   return (
     <group position={mainLight}>
       <mesh>
-        <sphereGeometry args={[0.27, 24, 16]} />
-        <meshBasicMaterial color="#fff3db" toneMapped={false} />
+        <sphereGeometry args={[1.02, 40, 24]} />
+        <Suspense fallback={<meshBasicMaterial color="#ffbd6c" toneMapped={false} />}>
+          <SunMap />
+        </Suspense>
       </mesh>
       {texture && (
-        <sprite scale={[5.2, 5.2, 1]}>
-          <spriteMaterial map={texture} color="#f6b675" transparent opacity={0.47}
+        <sprite scale={[6.5, 6.5, 1]}>
+          <spriteMaterial map={texture} color="#f6b675" transparent opacity={0.38}
             depthWrite={false} blending={AdditiveBlending} toneMapped={false} />
         </sprite>
       )}
@@ -155,7 +92,7 @@ function Orbit({ position }: { position: Section["position"] }) {
     const vertices = Array.from({ length: 128 }, (_, index) => {
       const angle = index / 128 * Math.PI * 2;
       const z = Math.sin(angle) * radius;
-      return new Vector3(mainLight[0] + Math.cos(angle) * radius, mainLight[1] - z * 0.56, mainLight[2] + z);
+      return new Vector3(...orbitPosition(mainLight[0] + Math.cos(angle) * radius, mainLight[2] + z));
     });
     return new BufferGeometry().setFromPoints(vertices);
   }, [position]);
@@ -210,7 +147,7 @@ function CameraRig({ sections, selectedSlug, phase, onArrive, onReturn }: Pick<P
     if (phase === "travel" || phase === "return") {
       const duration = phase === "travel" ? TRAVEL_DURATION_MS : RETURN_DURATION_MS;
       const previous = elapsed.current;
-      elapsed.current += Math.min(delta, 0.045) * 1000;
+      if (!changed) elapsed.current += delta * 1000;
       const raw = Math.min(elapsed.current / duration, 1);
       const eased = raw * raw * (3 - 2 * raw);
       const inverse = 1 - eased;
@@ -238,12 +175,8 @@ export function StarfieldScene(props: Props) {
   const { sections, selectedSlug, phase, reducedMotion, mobile, onActivate, onArrive, onReturn, onContextLost, onReady } = props;
   const sceneSections = useMemo(() => sections.map((section, index) => {
     const [x, , z] = section.position;
-    const depth = mobile ? [-18, -18.6, -15.8][index] ?? z : z;
-    const position: Section["position"] = [
-      mobile ? [-2.15, 2.2, 0.2][index] ?? x : x,
-      mainLight[1] - (depth - mainLight[2]) * 0.56,
-      depth,
-    ];
+    const depth = mobile ? [-18, -18.6, -13.8][index] ?? z : z;
+    const position = orbitPosition(mobile ? [-2.15, 2.2, 0.2][index] ?? x : x, depth);
     return { ...section, position };
   }), [mobile, sections]);
   useEffect(() => () => { document.body.style.cursor = ""; }, []);
@@ -261,15 +194,29 @@ export function StarfieldScene(props: Props) {
         });
       }}
     >
-      <GalaxyBackdrop mobile={mobile} animate={!reducedMotion} />
-      <SystemStar />
+      <SolarSky />
+      <ambientLight intensity={0.82} />
+      <pointLight position={mainLight} intensity={2.75} color="#fff1da" decay={0} />
+      <Sun />
+      {overviewBodies.map(({ surface, radius, desktop, mobile: compact }) => {
+        const position = orbitPosition(...(mobile ? compact : desktop));
+        return (
+          <group key={surface}>
+            <Orbit position={position} />
+            <group position={position}>
+              <PlanetBody surface={surface} mobile={mobile} radius={radius * (mobile ? 0.64 : 1)}
+                animate={!reducedMotion} />
+            </group>
+          </group>
+        );
+      })}
       {sceneSections.map((section, index) => (
         <group key={section.slug}>
           <Orbit position={section.position} />
           <group position={section.position}>
-            <PlanetBody surface={surfaceFor(section.slug)} mobile={mobile} seed={index + 1}
-              radius={(mobile ? 0.62 : 1) * ([1.43, 1.25, 0.98][index] ?? 1)}
-              ring={section.slug === "podcast"} animate={!reducedMotion}
+            <PlanetBody surface={section.surface} mobile={mobile}
+              radius={(mobile ? 0.62 : 1) * ([1.16, 0.94, 1.02][index] ?? 1)}
+              animate={!reducedMotion}
               onPointerOver={(event) => {
                 event.stopPropagation();
                 document.body.style.cursor = "pointer";
@@ -285,14 +232,5 @@ export function StarfieldScene(props: Props) {
       <CameraRig sections={sceneSections} selectedSlug={selectedSlug} phase={phase}
         onArrive={onArrive} onReturn={onReturn} />
     </Canvas>
-  );
-}
-
-export function GalaxyBackdrop({ mobile, animate = true }: { mobile: boolean; animate?: boolean }) {
-  return (
-    <>
-      <Galaxy mobile={mobile} />
-      <Dust mobile={mobile} animate={animate} />
-    </>
   );
 }

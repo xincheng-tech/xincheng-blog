@@ -22,9 +22,9 @@ const { section } = Astro.props;
       <a class="wordmark" href={sitePath()} aria-label="星辰界首页">XINGCHEN <span>VERSE</span></a>
       <span class="header-note"><i></i> 星际档案</span>
     </header>
-    <a class="back-link" href={sitePath()} aria-label="返回星辰界首页">← 返回星系</a>
+    <a class="back-link" href={sitePath()} aria-label="返回星辰界首页">← 返回太阳系</a>
     <section class="section-hero" aria-labelledby="section-title">
-      <p class="eyebrow">ORBIT · 0{sections.indexOf(section) + 1}</p>
+      <p class="eyebrow">{planetSurfaces[section.surface].name}</p>
       <h1 id="section-title">{section.name}</h1>
       <p class="section-intro">{section.intro}</p>
     </section>
@@ -34,17 +34,17 @@ const { section } = Astro.props;
           id={"content-item-" + index}
           href={"#content-item-" + index}
           data-content-index={index}
-          style={"--planet-accent:" + planetSurfaces[item.surface].palette[3]}
+          style={"--planet-accent:" + planetSurfaces[item.surface].color}
           aria-label={"聚焦内容星：" + item.title + "，" + item.meta}
         >
           <span class="content-orb-mark" aria-hidden="true"></span>
           <span class="content-orbit-copy">
             <strong>{item.title}</strong>
-            <small>{item.meta}</small>
+            <small>{planetSurfaces[item.surface].name} · {item.meta}</small>
           </span>
         </a>
       ))}
     </nav>
-    <footer class="section-footer">每颗内容星，都记录着一段旅程</footer>
+    <footer class="section-footer"><a class="art-credit-link" href={sitePath("credits/")}>影像来源</a></footer>
   </main>
 </SiteLayout>

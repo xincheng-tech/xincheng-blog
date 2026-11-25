@@ -1,6 +1,6 @@
 # 星辰界 · Xingchen Verse
 
-杨鑫成的个人小世界：用一个可探索的 3D 星系呈现日常、技术与播客。
+杨鑫成的个人小世界：通过可探索的 3D 太阳系进入日常、技术与播客。
 
 ## 本地运行
 
@@ -25,7 +25,7 @@ npm run preview
 - postprocessing 6.39.6 — Zlib
 - TypeScript 6.0.3 — Apache-2.0
 
-场景使用公开包 API 和程序生成的视觉，不复制模板仓库代码或第三方插画。
+场景使用 Solar System Scope 的天体贴图和 ESO/S. Brunier 的银河全景。来源、署名和修改说明见站内的「影像来源」页面。
 
 站点使用自托管的 Noto Sans SC（SIL OFL 1.1），字体文件包含现有页面文案所用字符。新增字符由系统中文字体补齐。
 
