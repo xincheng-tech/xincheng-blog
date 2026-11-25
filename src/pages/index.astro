@@ -2,6 +2,7 @@
 import SiteLayout from "../layouts/SiteLayout.astro";
 import { sections } from "../data/sections";
 import { UniverseExperience } from "../components/UniverseExperience";
+import { sitePath } from "../sitePath";
 ---
 <SiteLayout>
   <main class="home-shell">
@@ -9,7 +10,7 @@ import { UniverseExperience } from "../components/UniverseExperience";
     <UniverseExperience client:only="react" sections={sections} />
 
     <header class="site-header">
-      <a class="wordmark" href="/" aria-label="星辰界首页">XINGCHEN <span>VERSE</span></a>
+      <a class="wordmark" href={sitePath()} aria-label="星辰界首页">XINGCHEN <span>VERSE</span></a>
       <span class="header-note"><i></i> 一个人的小宇宙</span>
     </header>
 
@@ -23,7 +24,7 @@ import { UniverseExperience } from "../components/UniverseExperience";
       {sections.map((section) => (
         <a
           class:list={["constellation-link", "constellation-link--" + section.slug]}
-          href={"/" + section.slug + "/"}
+          href={sitePath(section.slug + "/")}
           data-slug={section.slug}
           style={"--accent:" + section.color}
           aria-label={"前往" + section.name + "星球：" + section.intro}

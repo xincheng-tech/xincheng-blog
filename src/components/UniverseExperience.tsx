@@ -1,6 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import type { Section } from "../data/sections";
+import { sitePath } from "../sitePath";
 import { SceneErrorBoundary } from "./SceneErrorBoundary";
 import { RETURN_DURATION_MS, TRAVEL_DURATION_MS } from "./travelTiming";
 
@@ -52,7 +53,7 @@ export function UniverseExperience({ sections }: Props) {
     if (timer.current) window.clearTimeout(timer.current);
     timer.current = undefined;
     setPhase("arrived");
-    window.location.assign("/" + selectedSlug + "/");
+    window.location.assign(sitePath(selectedSlug + "/"));
   }, [phase, reducedMotion, selectedSlug]);
 
   const onPreview = useCallback((slug: string | null) => {
@@ -70,7 +71,7 @@ export function UniverseExperience({ sections }: Props) {
     if (resetTimer.current) window.clearTimeout(resetTimer.current);
     resetTimer.current = undefined;
     if (reducedMotion || !sceneAvailable || !sceneReady) {
-      window.location.assign("/" + section.slug + "/");
+      window.location.assign(sitePath(section.slug + "/"));
       return;
     }
     if (timer.current) window.clearTimeout(timer.current);
@@ -80,7 +81,7 @@ export function UniverseExperience({ sections }: Props) {
     timer.current = window.setTimeout(() => {
       timer.current = undefined;
       setPhase("arrived");
-      window.location.assign("/" + section.slug + "/");
+      window.location.assign(sitePath(section.slug + "/"));
     }, TRAVEL_DURATION_MS);
   }, [phase, reducedMotion, sceneAvailable, sceneReady]);
 
@@ -136,7 +137,6 @@ export function UniverseExperience({ sections }: Props) {
       setPhase("return");
       setSelectedSlug(null);
       setPreviewSlug(null);
-      window.history.replaceState(null, "", "/");
       resetTimer.current = window.setTimeout(() => {
         resetTimer.current = undefined;
         setPhase("idle");

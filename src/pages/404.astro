@@ -1,10 +1,11 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
+import { sitePath } from "../sitePath";
 ---
 <SiteLayout title="未找到 · 星辰界">
   <main class="not-found">
     <p class="eyebrow">坐标尚未标记</p>
     <h1>这颗星还没有名字</h1>
-    <a class="back-link" href="/">← 返回星海</a>
+    <a class="back-link" href={sitePath()}>← 返回星海</a>
   </main>
 </SiteLayout>
