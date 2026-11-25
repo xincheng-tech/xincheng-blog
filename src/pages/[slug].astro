@@ -1,6 +1,7 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
 import { sections } from "../data/sections";
+import { planetSurfaces } from "../data/planetSurfaces";
 import { SectionUniverseExperience } from "../components/SectionUniverseExperience";
 import { sitePath } from "../sitePath";
 
@@ -33,7 +34,7 @@ const { section } = Astro.props;
           id={"content-item-" + index}
           href={"#content-item-" + index}
           data-content-index={index}
-          style={"--content-index:" + index}
+          style={"--planet-accent:" + planetSurfaces[item.surface].palette[3]}
           aria-label={"聚焦内容星：" + item.title + "，" + item.meta}
         >
           <span class="content-orb-mark" aria-hidden="true"></span>

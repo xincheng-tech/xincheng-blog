@@ -2,20 +2,15 @@ import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import type { ThreeElements } from "@react-three/fiber";
 import { AdditiveBlending, Color, DoubleSide, Vector3 } from "three";
-import type { Mesh } from "three";
+import type { Group, Mesh } from "three";
+import { planetSurfaces } from "../data/planetSurfaces";
+import type { PlanetSurface } from "../data/planetSurfaces";
 
 type Vec3 = [number, number, number];
-type Surface = "rock" | "ocean" | "gas";
 
 export const mainLight: Vec3 = [-2.8, 0.4, -23];
 
-const palettes = {
-  rock: ["#513c31", "#cf9b6d", "#f4cf9c", "#f3ba83"],
-  ocean: ["#143953", "#3b8394", "#dae9dc", "#85cddd"],
-  gas: ["#513d59", "#a58da0", "#eadac0", "#cca8c6"],
-} as const;
-
-export function surfaceFor(slug: string): Surface {
+export function surfaceFor(slug: string): PlanetSurface {
   if (slug === "tech") return "ocean";
   if (slug === "podcast") return "gas";
   return "rock";
@@ -70,6 +65,7 @@ void main() {
   vec3 sphere = normalize(vLocal);
   vec3 p = sphere * 4.6 + vec3(uSeed, 0.0, 5.0);
   float detail = terrain(p);
+  float glow = 0.0;
   vec3 painted;
   if (uSurface == 2) {
     float latitude = sphere.y + (detail - 0.5) * 0.15;
@@ -81,6 +77,46 @@ void main() {
     float clouds = smoothstep(0.55, 0.7, terrain(p * vec3(1.1, 2.1, 1.1) + 14.0));
     painted = mix(uDark, uMid, land);
     painted = mix(painted, uHigh, max(clouds * 0.68, smoothstep(0.83, 1.0, abs(sphere.y)) * 0.82));
+  } else if (uSurface == 3) {
+    float dunes = 0.5 + 0.5 * sin(34.0 * (sphere.y + 0.62 * sphere.x) + 12.0 * detail);
+    painted = mix(uDark, uMid, smoothstep(0.18, 0.71, detail + dunes * 0.22));
+    painted = mix(painted, uHigh, 0.52 * pow(dunes, 3.0));
+  } else if (uSurface == 4) {
+    float cracks = 1.0 - smoothstep(0.006, 0.039, abs(detail - 0.51));
+    float frost = smoothstep(0.25, 0.68, detail + 0.17 * abs(sphere.y));
+    painted = mix(mix(uMid, uHigh, frost), uDark, cracks * 0.79);
+  } else if (uSurface == 5) {
+    float shore = smoothstep(0.41, 0.46, detail);
+    float uplands = smoothstep(0.55, 0.72, detail);
+    painted = mix(uDark, mix(uMid, uHigh, uplands), shore);
+    painted *= 0.86 + 0.24 * noise(p * 11.0);
+  } else if (uSurface == 6) {
+    float fault = 1.0 - smoothstep(0.012, 0.048, abs(detail - 0.5));
+    glow = fault * smoothstep(0.22, 0.69, noise(p * 2.7 + 33.0));
+    painted = mix(uDark, uMid, smoothstep(0.46, 0.68, detail));
+  } else if (uSurface == 7) {
+    float veins = 0.5 + 0.5 * sin(17.0 * (sphere.x - sphere.y * 0.54) + 15.0 * detail);
+    float shelves = floor(detail * 8.0) / 8.0;
+    painted = mix(uDark, uMid, smoothstep(0.22, 0.68, shelves));
+    painted = mix(painted, uHigh, pow(veins, 6.0) * 0.62);
+  } else if (uSurface == 8) {
+    float swirl = sin(6.0 * sphere.x + 4.0 * sphere.z + 9.0 * detail);
+    float clouds = terrain(vec3(p.x * 1.25, p.y * 2.35 + swirl, p.z) + 17.0);
+    painted = mix(uDark, uMid, smoothstep(0.2, 0.65, detail));
+    painted = mix(painted, uHigh, smoothstep(0.4, 0.66, clouds) * 0.88);
+  } else if (uSurface == 9) {
+    float latitude = sphere.y + 0.1 * detail;
+    float mist = 0.48 + 0.33 * sin(14.0 * latitude) + 0.13 * sin(43.0 * latitude);
+    painted = mix(mix(uDark, uMid, mist), uHigh, 0.68 * smoothstep(0.34, 0.85, mist));
+  } else if (uSurface == 10) {
+    float oxide = smoothstep(0.32, 0.65, detail);
+    float pits = smoothstep(0.4, 0.72, noise(p * 8.0));
+    painted = mix(uDark, uMid, oxide * (1.0 - 0.42 * pits));
+    painted = mix(painted, uHigh, 0.66 * smoothstep(0.58, 0.78, detail));
+  } else if (uSurface == 11) {
+    float currents = 0.5 + 0.5 * sin(18.0 * sphere.y + 4.0 * sphere.x + 15.0 * detail);
+    painted = mix(uDark, uMid, smoothstep(0.25, 0.68, detail + currents * 0.13));
+    painted = mix(painted, uHigh, smoothstep(0.3, 0.96, currents) * 0.61);
   } else {
     float ridges = 1.0 - abs(2.0 * detail - 1.0);
     float strata = smoothstep(0.38, 0.72, detail) * 0.78;
@@ -93,7 +129,7 @@ void main() {
   vec3 lightDir = normalize((viewMatrix * vec4(uLight, 1.0)).xyz - vView);
   float day = dot(normal, lightDir);
   float light = 0.22 + 1.22 * pow(smoothstep(-0.33, 0.92, day), 0.82);
-  gl_FragColor = vec4(painted * light * vec3(1.07, 1.0, 0.91), 1.0);
+  gl_FragColor = vec4(painted * light * vec3(1.07, 1.0, 0.91) + uHigh * glow * 1.25, 1.0);
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
 }
@@ -127,9 +163,10 @@ void main() {
 }
 `;
 
-export function PlanetBody({ surface, radius, seed = 0, ring = false, animate = true, mobile, light = mainLight, ...events }: {
-  surface: Surface;
+export function PlanetBody({ surface, radius, emphasis = 1, seed = 0, ring = false, animate = true, mobile, light = mainLight, ...events }: {
+  surface: PlanetSurface;
   radius: number;
+  emphasis?: number;
   seed?: number;
   ring?: boolean;
   animate?: boolean;
@@ -137,14 +174,16 @@ export function PlanetBody({ surface, radius, seed = 0, ring = false, animate = 
   light?: Vec3;
 } & Pick<ThreeElements["mesh"], "onPointerOver" | "onPointerOut" | "onClick">) {
   const body = useRef<Mesh>(null);
+  const planet = useRef<Group>(null);
   const [surfaceUniforms, atmosphereUniforms, ringUniforms] = useMemo(() => {
-    const [dark, mid, high, atmosphere] = palettes[surface].map((color) => new Color(color));
+    const { palette, pattern } = planetSurfaces[surface];
+    const [dark, mid, high, atmosphere] = palette.map((color) => new Color(color));
     const uLight = { value: new Vector3(...light) };
     return [
       {
         uLight, uDark: { value: dark }, uMid: { value: mid }, uHigh: { value: high },
         uSeed: { value: seed * 9.1 },
-        uSurface: { value: surface === "rock" ? 0 : surface === "ocean" ? 1 : 2 },
+        uSurface: { value: pattern },
       },
       { uLight, uColor: { value: atmosphere } },
       { uColor: { value: mid.clone().lerp(high, 0.48) } },
@@ -153,26 +192,33 @@ export function PlanetBody({ surface, radius, seed = 0, ring = false, animate = 
 
   useFrame((_, delta) => {
     if (animate && body.current) body.current.rotation.y += Math.min(delta, 0.05) * 0.065;
+    if (planet.current) {
+      const scale = planet.current.scale.x;
+      const ease = animate ? 1 - Math.exp(-delta * 8) : 1;
+      planet.current.scale.setScalar(scale + (emphasis - scale) * ease);
+    }
   });
 
   return (
-    <group scale={radius} rotation={[0.12, 0, surface === "gas" ? -0.26 : 0.14]}>
-      <mesh ref={body} {...events}>
-        <sphereGeometry args={[1, mobile ? 28 : 48, mobile ? 20 : 32]} />
-        <shaderMaterial vertexShader={vertexShader} fragmentShader={surfaceShader} uniforms={surfaceUniforms} />
-      </mesh>
-      <mesh scale={surface === "ocean" ? 1.045 : 1.023}>
-        <sphereGeometry args={[1, 32, 24]} />
-        <shaderMaterial vertexShader={vertexShader} fragmentShader={atmosphereShader} uniforms={atmosphereUniforms}
-          transparent depthWrite={false} blending={AdditiveBlending} />
-      </mesh>
-      {ring && (
-        <mesh rotation={[1.19, 0.08, 0]}>
-          <ringGeometry args={[1.32, 2.2, mobile ? 48 : 96]} />
-          <shaderMaterial vertexShader={vertexShader} fragmentShader={ringShader} uniforms={ringUniforms}
-            transparent depthWrite={false} side={DoubleSide} />
+    <group scale={radius} rotation={[0.12, 0, ring ? -0.26 : 0.14]}>
+      <group ref={planet}>
+        <mesh ref={body} {...events}>
+          <sphereGeometry args={[1, mobile ? 28 : 48, mobile ? 20 : 32]} />
+          <shaderMaterial vertexShader={vertexShader} fragmentShader={surfaceShader} uniforms={surfaceUniforms} />
         </mesh>
-      )}
+        <mesh scale={surface === "ocean" ? 1.045 : 1.023}>
+          <sphereGeometry args={[1, 32, 24]} />
+          <shaderMaterial vertexShader={vertexShader} fragmentShader={atmosphereShader} uniforms={atmosphereUniforms}
+            transparent depthWrite={false} blending={AdditiveBlending} />
+        </mesh>
+        {ring && (
+          <mesh rotation={[1.19, 0.08, 0]}>
+            <ringGeometry args={[1.32, 2.2, mobile ? 48 : 96]} />
+            <shaderMaterial vertexShader={vertexShader} fragmentShader={ringShader} uniforms={ringUniforms}
+              transparent depthWrite={false} side={DoubleSide} />
+          </mesh>
+        )}
+      </group>
     </group>
   );
 }

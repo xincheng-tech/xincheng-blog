@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Vector3 } from "three";
 import type { Section } from "../data/sections";
+import type { PlanetSurface } from "../data/planetSurfaces";
 import { GalaxyBackdrop } from "./StarfieldScene";
 import { SceneErrorBoundary } from "./SceneErrorBoundary";
 import { PlanetBody, surfaceFor } from "./PlanetBody";
@@ -11,20 +12,20 @@ type Props = { section: Section };
 const desktopPositions: [number, number, number][] = [
   [-5.1, 1.2, -14],
   [5.1, 0.3, -16],
-  [0.3, -2.8, -14],
+  [1.1, -2.4, -15],
 ];
 
 const mobilePositions: [number, number, number][] = [
-  [-1.85, 0.7, -13],
-  [2.4, -0.45, -15],
-  [-0.15, -2.0, -13],
+  [-1.95, 0.7, -13],
+  [2.15, -0.45, -15],
+  [0.36, -1.72, -13],
 ];
 
 const sectionLight: [number, number, number] = [-11, 6, -9];
-const moonSurfaces = ["rock", "ocean", "gas"] as const;
 
 function ContentPlanet({
   position,
+  surface,
   index,
   mobile,
   selected,
@@ -32,6 +33,7 @@ function ContentPlanet({
   onSelect,
 }: {
   position: [number, number, number];
+  surface: PlanetSurface;
   index: number;
   mobile: boolean;
   selected: boolean;
@@ -41,12 +43,19 @@ function ContentPlanet({
   return (
     <group position={position}>
       <PlanetBody
-        surface={moonSurfaces[index % moonSurfaces.length]}
+        surface={surface}
         seed={index + 4}
         light={sectionLight}
-        radius={(mobile ? 0.49 : 0.67) * (selected ? 1.08 : 1)}
+        radius={mobile ? 0.52 : 0.72}
+        emphasis={selected ? 1.27 : 1}
+        ring={surface === "amber"}
         mobile={mobile}
         animate={!reducedMotion}
+        onPointerOver={(event) => {
+          event.stopPropagation();
+          document.body.style.cursor = "pointer";
+        }}
+        onPointerOut={() => { document.body.style.cursor = ""; }}
         onClick={(event) => {
           event.stopPropagation();
           onSelect();
@@ -65,8 +74,8 @@ function SectionCamera({ positions, selectedIndex, reducedMotion }: { positions:
   useFrame((_, delta) => {
     const selected = selectedIndex === null ? null : positions[selectedIndex];
     if (selected) {
-      targetPosition.current.set(selected[0] * 0.52, selected[1] * 0.52, selected[2] + 4.4);
-      targetLook.current.set(...selected);
+      targetPosition.current.set(selected[0] * 0.08, selected[1] * 0.08, -1.15);
+      targetLook.current.set(selected[0] * 0.13, selected[1] * 0.13, -19);
     } else {
       targetPosition.current.set(0, 0, 0);
       targetLook.current.set(0, 0, -19);
@@ -85,12 +94,44 @@ function SectionCamera({ positions, selectedIndex, reducedMotion }: { positions:
   return null;
 }
 
+function SectionSystem({ section, mobile, selectedIndex, reducedMotion, choose }: {
+  section: Section;
+  mobile: boolean;
+  selectedIndex: number | null;
+  reducedMotion: boolean;
+  choose: (index: number | null) => void;
+}) {
+  const { width, height } = useThree((state) => state.size);
+  const horizontalScale = Math.min(1, width / Math.max(height, 1) / (mobile ? 0.46 : 1.31));
+  const slots = mobile ? mobilePositions : desktopPositions;
+  const positions = useMemo(() => section.items.map((_, index): [number, number, number] => {
+    const [x, y, z] = slots[index % slots.length];
+    return [x * horizontalScale, y, z];
+  }), [section.items, slots, horizontalScale]);
+
+  return (
+    <>
+      <GalaxyBackdrop mobile={mobile} animate={!reducedMotion} />
+      <group position={[0, 0, -19]}>
+        <PlanetBody surface={surfaceFor(section.slug)} light={sectionLight}
+          radius={mobile ? 1.45 : 1.9} mobile={mobile} animate={!reducedMotion}
+          ring={section.slug === "podcast"} />
+      </group>
+      {section.items.map((item, index) => (
+        <ContentPlanet key={item.title} position={positions[index]} surface={item.surface}
+          index={index} mobile={mobile} selected={selectedIndex === index}
+          reducedMotion={reducedMotion} onSelect={() => choose(index)} />
+      ))}
+      <SectionCamera positions={positions} selectedIndex={selectedIndex} reducedMotion={reducedMotion} />
+    </>
+  );
+}
+
 export function SectionUniverseExperience({ section }: Props) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [mobile, setMobile] = useState(() => window.matchMedia("(max-width: 700px)").matches);
   const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   const [sceneAvailable, setSceneAvailable] = useState(true);
-  const positions = useMemo(() => mobile ? mobilePositions : desktopPositions, [mobile]);
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 700px)");
@@ -105,13 +146,17 @@ export function SectionUniverseExperience({ section }: Props) {
     return () => {
       media.removeEventListener("change", update);
       motion.removeEventListener("change", update);
+      document.body.style.cursor = "";
     };
   }, []);
 
   const choose = useCallback((index: number | null) => {
     setSelectedIndex(index);
     document.querySelectorAll<HTMLAnchorElement>("[data-content-index]").forEach((link) => {
-      link.classList.toggle("is-selected", Number(link.dataset.contentIndex) === index);
+      const current = Number(link.dataset.contentIndex) === index;
+      link.classList.toggle("is-selected", current);
+      if (current) link.setAttribute("aria-current", "true");
+      else link.removeAttribute("aria-current");
     });
   }, []);
 
@@ -156,24 +201,8 @@ export function SectionUniverseExperience({ section }: Props) {
             dpr={mobile ? [1, 1.2] : [1, 1.5]}
             gl={{ alpha: true, antialias: !mobile, powerPreference: "low-power" }}
           >
-            <GalaxyBackdrop mobile={mobile} animate={!reducedMotion} />
-            <group position={[0, 0, -19]}>
-              <PlanetBody surface={surfaceFor(section.slug)} light={sectionLight}
-                radius={mobile ? 1.6 : 1.9} mobile={mobile} animate={!reducedMotion}
-                ring={section.slug === "podcast"} />
-            </group>
-            {section.items.map((item, index) => (
-              <ContentPlanet
-                key={item.title}
-                position={positions[index % positions.length]}
-                index={index}
-                mobile={mobile}
-                selected={selectedIndex === index}
-                reducedMotion={reducedMotion}
-                onSelect={() => choose(index)}
-              />
-            ))}
-            <SectionCamera positions={positions} selectedIndex={selectedIndex} reducedMotion={reducedMotion} />
+            <SectionSystem section={section} mobile={mobile} selectedIndex={selectedIndex}
+              reducedMotion={reducedMotion} choose={choose} />
           </Canvas>
         </SceneErrorBoundary>
       )}
@@ -181,7 +210,6 @@ export function SectionUniverseExperience({ section }: Props) {
         <aside className="content-orbit-preview" aria-live="polite">
           <span>{selected.meta}</span>
           <strong>{selected.title}</strong>
-          <p>正文正在整理，先在这里留下一个入口。</p>
           <button type="button" onClick={() => choose(null)} aria-label="关闭内容预览">×</button>
         </aside>
       )}

@@ -27,6 +27,8 @@ npm run preview
 
 场景使用公开包 API 和程序生成的视觉，不复制模板仓库代码或第三方插画。
 
+站点使用自托管的 Noto Sans SC（SIL OFL 1.1），字体文件包含现有页面文案所用字符。新增字符由系统中文字体补齐。
+
 ## 参考项目
 
 - [three.js](https://github.com/mrdoob/three.js) — 渲染基础
