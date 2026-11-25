@@ -3,6 +3,7 @@ import SiteLayout from "../layouts/SiteLayout.astro";
 import { sections } from "../data/sections";
 import { planetSurfaces } from "../data/planetSurfaces";
 import { UniverseExperience } from "../components/UniverseExperience";
+import DecryptedText from "../components/DecryptedText.jsx";
 import { sitePath } from "../sitePath";
 ---
 <SiteLayout>
@@ -30,7 +31,18 @@ import { sitePath } from "../sitePath";
           style={"--accent:" + section.color}
           aria-label={planetSurfaces[section.surface].name + " · " + section.name + "：" + section.intro}
         >
-          <span class="link-name">{planetSurfaces[section.surface].name} · {section.name}</span>
+          <DecryptedText
+            client:load
+            text={planetSurfaces[section.surface].name + " · " + section.name}
+            parentClassName="link-name"
+            encryptedClassName="link-name-encrypted"
+            animateOn="hover"
+            effect="scramble"
+            sequential={true}
+            revealDirection="start"
+            speed={38}
+            characters="0123456789+−×<>"
+          />
           <span class="link-summary">{section.intro}</span>
         </a>
       ))}
