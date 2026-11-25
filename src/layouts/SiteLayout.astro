@@ -1,6 +1,7 @@
 ---
 import "../styles/global.css";
 import { sitePath } from "../sitePath";
+import { handoffKey } from "../travelHandoff";
 
 type Props = {
   title?: string;
@@ -21,8 +22,22 @@ const {
     <meta name="description" content={description} />
     <link rel="icon" type="image/svg+xml" href={sitePath("site-icon.svg")} />
     <title>{title}</title>
+    <script define:vars={{ handoffKey }}>
+      try {
+        const value = sessionStorage.getItem(handoffKey);
+        sessionStorage.removeItem(handoffKey);
+        if (value && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          const { path, expires } = JSON.parse(value);
+          if (path === location.pathname && Date.now() < expires) {
+            document.documentElement.dataset.travelArrival = "";
+            window.setTimeout(() => delete document.documentElement.dataset.travelArrival, 1500);
+          }
+        }
+      } catch {}
+    </script>
   </head>
   <body>
     <slot />
+    <div class="travel-veil" aria-hidden="true"></div>
   </body>
 </html>

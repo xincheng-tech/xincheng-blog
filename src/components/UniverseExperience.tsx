@@ -1,6 +1,8 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import type { Section } from "../data/sections";
 import { sitePath } from "../sitePath";
+import { planetSurfaces } from "../data/planetSurfaces";
+import { rememberArrival } from "../travelHandoff";
 import { SceneErrorBoundary } from "./SceneErrorBoundary";
 
 const StarfieldScene = lazy(() =>
@@ -22,6 +24,7 @@ export function UniverseExperience({ sections }: Props) {
   const [mobile, setMobile] = useState(() => window.matchMedia("(max-width: 700px)").matches);
   const destination = useRef<string | null>(null);
   const prefetched = useRef(new Set<string>());
+  const navigationTimer = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -44,6 +47,7 @@ export function UniverseExperience({ sections }: Props) {
       motion.removeEventListener("change", update);
       small.removeEventListener("change", update);
       window.removeEventListener("pageshow", restore);
+      window.clearTimeout(navigationTimer.current);
     };
   }, []);
 
@@ -51,9 +55,17 @@ export function UniverseExperience({ sections }: Props) {
     if (!destination.current) return;
     const slug = destination.current;
     destination.current = null;
+    const path = sitePath(slug + "/");
+    if (reducedMotion || !sceneAvailable) {
+      window.location.assign(path);
+      return;
+    }
     setPhase("arrived");
-    window.location.assign(sitePath(slug + "/"));
-  }, []);
+    navigationTimer.current = window.setTimeout(() => {
+      rememberArrival(path);
+      window.location.assign(path);
+    }, 200);
+  }, [reducedMotion, sceneAvailable]);
 
   useEffect(() => {
     if (phase === "travel" && (reducedMotion || !sceneAvailable)) arrive();
@@ -66,7 +78,15 @@ export function UniverseExperience({ sections }: Props) {
     hint.rel = "prefetch";
     hint.href = sitePath(slug + "/");
     document.head.append(hint);
-  }, []);
+    const section = sections.find((entry) => entry.slug === slug);
+    if (!section) return;
+    const textures = new Set([section.surface, ...section.items.map((item) => item.surface)]);
+    for (const surface of textures) {
+      const image = new Image();
+      image.fetchPriority = "low";
+      image.src = sitePath("textures/solar-system/" + planetSurfaces[surface].file + ".webp");
+    }
+  }, [sections]);
 
   const activate = useCallback((section: Section) => {
     if (destination.current || phase === "arrived") return;
@@ -127,7 +147,7 @@ export function UniverseExperience({ sections }: Props) {
   const onSceneError = useCallback(() => setSceneAvailable(false), []);
   const onReturn = useCallback(() => setPhase("idle"), []);
   return (
-    <div className={"universe " + (phase === "travel" || phase === "arrived" ? "is-traveling" : "") + (sceneAvailable ? "" : " scene-fallback")}>
+    <div className={"universe " + (phase === "travel" || phase === "arrived" ? "is-traveling" : "") + (phase === "arrived" ? " is-arriving" : "") + (sceneAvailable ? "" : " scene-fallback")}>
       {sceneAvailable && (
         <SceneErrorBoundary onError={onSceneError}>
           <Suspense fallback={null}>

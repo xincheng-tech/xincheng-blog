@@ -1,13 +1,28 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Vector3 } from "three";
 import type { Section } from "../data/sections";
 import type { PlanetSurface } from "../data/planetSurfaces";
+import { planetSurfaces } from "../data/planetSurfaces";
 import { SolarSky } from "./SolarSky";
 import { SceneErrorBoundary } from "./SceneErrorBoundary";
-import { PlanetBody } from "./PlanetBody";
+import { PlanetBody, useSolarTexture } from "./PlanetBody";
+import { revealArrival } from "../travelHandoff";
 
 type Props = { section: Section };
+
+function RevealAfterSceneFrame({ surface }: { surface: PlanetSurface }) {
+  useSolarTexture("milky-way");
+  useSolarTexture(planetSurfaces[surface].file);
+  const frame = useRef<number | null>(null);
+  useFrame(() => {
+    if (frame.current === null) frame.current = requestAnimationFrame(revealArrival);
+  });
+  useEffect(() => () => {
+    if (frame.current !== null) cancelAnimationFrame(frame.current);
+  }, []);
+  return null;
+}
 
 const desktopPositions: [number, number, number][] = [
   [-5.1, 1.2, -14],
@@ -128,6 +143,7 @@ export function SectionUniverseExperience({ section }: Props) {
   const [mobile, setMobile] = useState(() => window.matchMedia("(max-width: 700px)").matches);
   const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   const [sceneAvailable, setSceneAvailable] = useState(true);
+  const [landing] = useState(() => document.documentElement.hasAttribute("data-travel-arrival"));
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 700px)");
@@ -190,7 +206,7 @@ export function SectionUniverseExperience({ section }: Props) {
   return (
     <div className="section-universe">
       {sceneAvailable && (
-        <SceneErrorBoundary onError={() => setSceneAvailable(false)}>
+        <SceneErrorBoundary onError={() => { revealArrival(); setSceneAvailable(false); }}>
           <Canvas
             className="section-canvas"
             camera={{ position: [0, 0, 0], fov: 54, near: 0.1, far: 120 }}
@@ -199,6 +215,9 @@ export function SectionUniverseExperience({ section }: Props) {
           >
             <SectionSystem section={section} mobile={mobile} selectedIndex={selectedIndex}
               reducedMotion={reducedMotion} choose={choose} />
+            {landing && (
+              <Suspense fallback={null}><RevealAfterSceneFrame surface={section.surface} /></Suspense>
+            )}
           </Canvas>
         </SceneErrorBoundary>
       )}

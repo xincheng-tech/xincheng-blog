@@ -21,6 +21,18 @@
 * { box-sizing: border-box; }
 html, body { min-width: 320px; min-height: 100%; margin: 0; }
 body { background: var(--night); color: var(--ink); }
+.travel-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+  background: #050711;
+  opacity: 0;
+  transition: opacity 240ms ease-out;
+}
+body:has(.is-arriving) > .travel-veil { opacity: 1; transition-duration: 180ms; }
+html[data-travel-arrival] .travel-veil { opacity: 1; transition: none; }
+@media (prefers-reduced-motion: reduce) { .travel-veil { display: none; } }
 a { color: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
 :focus-visible { outline: 2px solid #fff0bd; outline-offset: 5px; }
