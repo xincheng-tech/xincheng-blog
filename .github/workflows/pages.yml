@@ -7,19 +7,14 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: github-pages
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -32,50 +27,19 @@ jobs:
       - run: npm run build -- --base "$PAGES_BASE"
         env:
           PAGES_BASE: ${{ steps.pages.outputs.base_path || '/' }}
-      - uses: actions/upload-pages-artifact@v5.0.0
-        id: upload
+      - uses: actions/upload-pages-artifact@v4
         with:
           path: dist
-      - name: Deploy the uploaded Pages artifact
-        uses: actions/github-script@v9
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
         id: deployment
-        env:
-          PAGES_ARTIFACT_ID: ${{ steps.upload.outputs.artifact_id }}
-        with:
-          script: |
-            // The upload returns the exact artifact ID. Use it directly so deployment
-            // does not depend on the Actions artifact search service.
-            const artifactId = Number(process.env.PAGES_ARTIFACT_ID);
-            if (!Number.isSafeInteger(artifactId) || artifactId < 1) {
-              throw new Error("Pages upload did not provide a valid artifact ID");
-            }
-            const oidcToken = await core.getIDToken();
-            core.setSecret(oidcToken);
-            const { data: deployment } = await github.request(
-              "POST /repos/{owner}/{repo}/pages/deployments",
-              {
-                ...context.repo,
-                artifact_id: artifactId,
-                pages_build_version: context.sha,
-                oidc_token: oidcToken,
-              },
-            );
-            const deploymentId = deployment.id ?? context.sha;
-            const failures = new Set([
-              "deployment_failed", "deployment_content_failed",
-              "deployment_cancelled", "deployment_lost",
-            ]);
-            for (let attempt = 0; attempt < 48; attempt++) {
-              await new Promise((resolve) => setTimeout(resolve, 5000));
-              const { data } = await github.request(
-                "GET /repos/{owner}/{repo}/pages/deployments/{pages_deployment_id}",
-                { ...context.repo, pages_deployment_id: deploymentId },
-              );
-              if (data.status === "succeed") {
-                core.setOutput("page_url", deployment.page_url);
-                core.info(`Published ${deployment.page_url}`);
-                return;
-              }
-              if (failures.has(data.status)) throw new Error(`Pages deployment: ${data.status}`);
-            }
-            throw new Error(`Timed out waiting for Pages deployment ${deploymentId}`);
