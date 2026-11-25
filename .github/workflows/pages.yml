@@ -6,7 +6,6 @@ on:
       - codex/xingchen-galaxy-3d
 
 permissions:
-  actions: read
   contents: read
   pages: write
   id-token: write
@@ -33,27 +32,8 @@ jobs:
       - run: npm run build -- --base "$PAGES_BASE"
         env:
           PAGES_BASE: ${{ steps.pages.outputs.base_path || '/' }}
-      - uses: actions/upload-pages-artifact@v4
-        id: upload
+      - uses: actions/upload-pages-artifact@v5.0.0
         with:
           path: dist
-      - name: Wait for the Pages artifact
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PAGES_ARTIFACT_ID: ${{ steps.upload.outputs.artifact_id }}
-        run: |
-          if [[ -z "$PAGES_ARTIFACT_ID" ]]; then
-            echo "The Pages upload did not return an artifact ID."
-            exit 1
-          fi
-          for attempt in {1..12}; do
-            if ids=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts" --jq '.artifacts[] | select(.name == "github-pages" and .expired == false) | .id') &&
-              grep -qx "$PAGES_ARTIFACT_ID" <<< "$ids"; then
-              exit 0
-            fi
-            sleep 5
-          done
-          echo "GitHub did not list the newly uploaded Pages artifact."
-          exit 1
-      - uses: actions/deploy-pages@v4
+      - uses: actions/deploy-pages@v5.0.1
         id: deployment
