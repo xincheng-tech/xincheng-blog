@@ -1,30 +1,27 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
-import type { CSSProperties } from "react";
 import type { Section } from "../data/sections";
 import { sitePath } from "../sitePath";
 import { SceneErrorBoundary } from "./SceneErrorBoundary";
-import { RETURN_DURATION_MS, TRAVEL_DURATION_MS } from "./travelTiming";
 
 const StarfieldScene = lazy(() =>
   import("./StarfieldScene").then((module) => ({ default: module.StarfieldScene })),
 );
 
-type Phase = "idle" | "preview" | "travel" | "arrived" | "return";
+type Phase = "idle" | "travel" | "arrived" | "return";
 
 type Props = { sections: Section[] };
 
 export function UniverseExperience({ sections }: Props) {
   const [phase, setPhase] = useState<Phase>("idle");
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
-  const [previewSlug, setPreviewSlug] = useState<string | null>(null);
   const [sceneReady, setSceneReady] = useState(false);
   const [sceneAvailable, setSceneAvailable] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(() =>
     window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
-  const [mobile, setMobile] = useState(false);
-  const timer = useRef<number | undefined>(undefined);
-  const resetTimer = useRef<number | undefined>(undefined);
+  const [mobile, setMobile] = useState(() => window.matchMedia("(max-width: 700px)").matches);
+  const destination = useRef<string | null>(null);
+  const prefetched = useRef(new Set<string>());
 
   useEffect(() => {
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -36,11 +33,17 @@ export function UniverseExperience({ sections }: Props) {
     update();
     motion.addEventListener("change", update);
     small.addEventListener("change", update);
+    const restore = (event: PageTransitionEvent) => {
+      if (!event.persisted) return;
+      destination.current = null;
+      setSelectedSlug(null);
+      setPhase("idle");
+    };
+    window.addEventListener("pageshow", restore);
     return () => {
       motion.removeEventListener("change", update);
       small.removeEventListener("change", update);
-      if (timer.current) window.clearTimeout(timer.current);
-      if (resetTimer.current) window.clearTimeout(resetTimer.current);
+      window.removeEventListener("pageshow", restore);
     };
   }, []);
 
@@ -48,42 +51,38 @@ export function UniverseExperience({ sections }: Props) {
     if (reducedMotion) setSceneReady(false);
   }, [reducedMotion]);
 
-  useEffect(() => {
-    if (!reducedMotion || phase !== "travel" || !selectedSlug) return;
-    if (timer.current) window.clearTimeout(timer.current);
-    timer.current = undefined;
+  const arrive = useCallback(() => {
+    if (!destination.current) return;
+    const slug = destination.current;
+    destination.current = null;
     setPhase("arrived");
-    window.location.assign(sitePath(selectedSlug + "/"));
-  }, [phase, reducedMotion, selectedSlug]);
+    window.location.assign(sitePath(slug + "/"));
+  }, []);
 
-  const onPreview = useCallback((slug: string | null) => {
-    if (phase === "travel") return;
-    const focusedLink = document.activeElement instanceof HTMLAnchorElement
-      ? document.activeElement
-      : null;
-    if (focusedLink?.dataset.slug && focusedLink.dataset.slug !== slug) return;
-    setPreviewSlug(slug);
-    setPhase(slug ? "preview" : "idle");
-  }, [phase]);
+  useEffect(() => {
+    if (phase === "travel" && (reducedMotion || !sceneAvailable)) arrive();
+  }, [arrive, phase, reducedMotion, sceneAvailable]);
+
+  const prefetch = useCallback((slug: string) => {
+    if (prefetched.current.has(slug)) return;
+    prefetched.current.add(slug);
+    const hint = document.createElement("link");
+    hint.rel = "prefetch";
+    hint.href = sitePath(slug + "/");
+    document.head.append(hint);
+  }, []);
 
   const activate = useCallback((section: Section) => {
-    if (phase === "travel") return;
-    if (resetTimer.current) window.clearTimeout(resetTimer.current);
-    resetTimer.current = undefined;
+    if (destination.current || phase === "arrived") return;
     if (reducedMotion || !sceneAvailable || !sceneReady) {
       window.location.assign(sitePath(section.slug + "/"));
       return;
     }
-    if (timer.current) window.clearTimeout(timer.current);
+    destination.current = section.slug;
     setSelectedSlug(section.slug);
-    setPreviewSlug(section.slug);
     setPhase("travel");
-    timer.current = window.setTimeout(() => {
-      timer.current = undefined;
-      setPhase("arrived");
-      window.location.assign(sitePath(section.slug + "/"));
-    }, TRAVEL_DURATION_MS);
-  }, [phase, reducedMotion, sceneAvailable, sceneReady]);
+    prefetch(section.slug);
+  }, [phase, prefetch, reducedMotion, sceneAvailable, sceneReady]);
 
   useEffect(() => {
     const cleanup: (() => void)[] = [];
@@ -96,13 +95,7 @@ export function UniverseExperience({ sections }: Props) {
         event.preventDefault();
         activate(section);
       };
-      const enter = () => onPreview(section.slug);
-      const leave = () => {
-        if (!link.matches(":focus")) onPreview(null);
-      };
-      const blur = () => {
-        if (!link.matches(":hover")) onPreview(null);
-      };
+      const enter = () => prefetch(section.slug);
       const keydown = (event: KeyboardEvent) => {
         if ((event.key === " " || event.key === "Spacebar") && !event.repeat) {
           event.preventDefault();
@@ -112,44 +105,33 @@ export function UniverseExperience({ sections }: Props) {
 
       link.addEventListener("click", click);
       link.addEventListener("pointerenter", enter);
-      link.addEventListener("pointerleave", leave);
       link.addEventListener("focus", enter);
-      link.addEventListener("blur", blur);
       link.addEventListener("keydown", keydown);
       cleanup.push(() => {
         link.removeEventListener("click", click);
         link.removeEventListener("pointerenter", enter);
-        link.removeEventListener("pointerleave", leave);
         link.removeEventListener("focus", enter);
-        link.removeEventListener("blur", blur);
         link.removeEventListener("keydown", keydown);
       });
     }
     return () => cleanup.forEach((remove) => remove());
-  }, [sections, activate, onPreview]);
+  }, [sections, activate, prefetch]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape" || phase === "idle") return;
-      if (timer.current) window.clearTimeout(timer.current);
-      timer.current = undefined;
-      if (resetTimer.current) window.clearTimeout(resetTimer.current);
+      if (event.key !== "Escape" || phase !== "travel") return;
+      destination.current = null;
       setPhase("return");
       setSelectedSlug(null);
-      setPreviewSlug(null);
-      resetTimer.current = window.setTimeout(() => {
-        resetTimer.current = undefined;
-        setPhase("idle");
-      }, reducedMotion ? 0 : RETURN_DURATION_MS);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [phase, reducedMotion]);
+  }, [phase]);
 
   const onSceneError = useCallback(() => setSceneAvailable(false), []);
-  const activeSection = sections.find((section) => section.slug === previewSlug);
+  const onReturn = useCallback(() => setPhase("idle"), []);
   return (
-    <div className={"universe " + (phase === "travel" ? "is-traveling" : "") + (sceneAvailable ? "" : " scene-fallback")}>
+    <div className={"universe " + (phase === "travel" || phase === "arrived" ? "is-traveling" : "") + (sceneAvailable ? "" : " scene-fallback")}>
       {sceneAvailable && !reducedMotion && (
         <SceneErrorBoundary onError={onSceneError}>
           <Suspense fallback={null}>
@@ -160,7 +142,8 @@ export function UniverseExperience({ sections }: Props) {
                 phase={phase}
                 reducedMotion={reducedMotion}
                 mobile={mobile}
-                onPreview={onPreview}
+                onArrive={arrive}
+                onReturn={onReturn}
                 onActivate={(slug) => {
                   const section = sections.find((entry) => entry.slug === slug);
                   if (section) activate(section);
@@ -171,14 +154,6 @@ export function UniverseExperience({ sections }: Props) {
             </div>
           </Suspense>
         </SceneErrorBoundary>
-      )}
-
-      {activeSection && phase !== "idle" && (
-        <aside className="destination-preview" aria-live="polite">
-          <span style={{ color: activeSection.color } as CSSProperties}>DESTINATION</span>
-          <strong>{activeSection.name}</strong>
-          <p>{activeSection.intro}</p>
-        </aside>
       )}
 
       {!sceneAvailable && (

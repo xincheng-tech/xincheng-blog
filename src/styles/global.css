@@ -39,7 +39,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .wordmark span { color: #8590b2; }
 .header-note { display: flex; align-items: center; gap: 10px; }
 .header-note i { width: 6px; height: 6px; border-radius: 50%; background: #78edee; box-shadow: 0 0 12px #78edee; }
-.hero { position: absolute; z-index: 1; top: 20%; left: 50%; width: min(90vw, 680px); transform: translateX(-50%); text-align: center; }
+.hero { position: absolute; z-index: 1; top: 15%; left: 50%; width: min(90vw, 680px); transform: translateX(-50%); text-align: center; }
 .eyebrow { margin: 0 0 18px; color: #9ca8cc; font-size: 10px; letter-spacing: .45em; text-transform: uppercase; }
 .hero h1, .section-hero h1, .not-found h1 {
   margin: 0; font-family: "Songti SC", "STSong", "SimSun", serif; font-weight: 400;
@@ -53,13 +53,19 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .constellation-link {
   position: absolute; display: grid; gap: 8px; width: min(230px, 27vw); padding: 12px 14px;
   text-decoration: none; border: 1px solid transparent; border-radius: 16px;
-  background: linear-gradient(130deg, #11182b88, #090d1c44); backdrop-filter: blur(8px);
+  background: #090d1944;
   transition: background .25s, border-color .25s, transform .35s;
 }
 .constellation-link:hover, .constellation-link:focus-visible { background: #151d32bd; border-color: color-mix(in srgb, var(--accent), transparent 58%); transform: translateY(-4px); }
-.constellation-link--daily { left: 15%; top: 59%; }
-.constellation-link--tech { right: 14%; top: 58%; }
-.constellation-link--podcast { left: 42%; top: 71%; }
+.constellation-link--daily { left: clamp(5%, calc(50% - 62svh), 40%); top: 71%; }
+.constellation-link--tech { right: clamp(5%, calc(50% - 53svh), 40%); top: 70%; }
+.constellation-link--podcast { left: calc(50% - min(115px, 13.5vw)); top: 81%; }
+@media (min-width: 701px) {
+  .constellation-link { translate: -50% 0; text-align: center; justify-items: center; }
+  .constellation-link--daily { left: max(12%, calc(50% - 51.8svh)); top: 72%; }
+  .constellation-link--tech { left: min(88%, calc(50% + 42.4svh)); right: auto; top: 70%; }
+  .constellation-link--podcast { left: calc(50% + 2.2svh); top: 81%; }
+}
 .link-name { color: var(--accent); font-family: "Songti SC", "STSong", serif; font-size: 24px; letter-spacing: .22em; }
 .link-summary { max-width: 23em; color: #8e99b8; font-size: 11px; line-height: 1.8; }
 .site-footer { bottom: 24px; }
@@ -84,6 +90,9 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .content-orbit-preview strong { font-family: "Songti SC", "STSong", serif; font-size: 20px; font-weight: 400; }
 .content-orbit-preview p { margin: 10px 0 0; color: #8994b2; font-size: 11px; }
 .content-orbit-preview button { position: absolute; top: 5px; right: 9px; border: 0; background: none; color: #b8c2df; font-size: 22px; cursor: pointer; }
+@media (min-width: 701px) {
+  .content-orbit-preview { left: auto; right: 5%; width: min(330px, 30vw); transform: translateY(-50%); }
+}
 .scene-fallback-status { position: absolute; z-index: 3; top: 75px; left: 50%; transform: translateX(-50%); color: #93a0c0; font-size: 11px; }
 .section-footer { bottom: 26px; justify-content: center; }
 .not-found { min-height: 100svh; display: grid; align-content: center; justify-items: center; text-align: center; padding: 24px; }
@@ -97,10 +106,12 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .eyebrow { margin-bottom: 10px; }
   .hero h1 { font-size: clamp(52px, 14vw, 76px); }
   .hero-copy { margin-top: 12px; font-size: 12px; }
-  .home-shell > .constellation { inset: 48% 0 7%; display: grid; align-content: center; justify-items: start; gap: 8px; }
-  .constellation-link { position: relative; inset: auto; width: min(320px, 82vw); padding: 11px 13px; gap: 4px; }
-  .constellation-link--daily, .constellation-link--tech, .constellation-link--podcast { left: 6%; right: auto; top: auto; }
-  .link-name { font-size: 21px; }
+  .home-shell > .constellation { inset: auto 12px 8%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .constellation-link { position: relative; inset: auto; width: 100%; padding: 9px 8px; gap: 4px; }
+  .constellation-link--daily, .constellation-link--tech, .constellation-link--podcast { inset: auto; }
+  .constellation-link--podcast { grid-column: 2; grid-row: 1; }
+  .constellation-link--tech { grid-column: 3; grid-row: 1; }
+  .link-name { font-size: 19px; }
   .link-summary { font-size: 10px; }
   .site-footer { bottom: 16px; font-size: 8px; }
   .site-footer span:last-child { display: none; }
@@ -108,7 +119,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .content-orbit-nav { bottom: 8%; width: calc(100vw - 36px); grid-template-columns: 1fr; gap: 8px; }
   .content-orbit-nav a { min-height: 59px; padding: 9px 12px; }
   .content-orb-mark { flex-basis: 28px; height: 28px; }
-  .content-orbit-preview { top: 43%; }
+  .content-orbit-preview { top: 58%; }
   .section-footer { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -121,6 +132,9 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .home-shell > .hero { z-index: 2; }
 .home-shell > .constellation { z-index: 3; pointer-events: none; }
 .home-shell > .constellation .constellation-link { pointer-events: auto; }
+.home-shell > .hero, .home-shell > .constellation { transition: opacity .4s ease; }
+.home-shell:has(.is-traveling) > :is(.hero, .constellation) { opacity: 0; }
+.home-shell:has(.is-traveling) > .constellation .constellation-link { pointer-events: none; }
 .constellation-link.is-selected { border-color: color-mix(in srgb, var(--accent), transparent 58%); }
 .fallback-note { position: absolute; z-index: 5; top: 70px; left: 50%; transform: translateX(-50%); padding: 8px 12px; border-radius: 99px; background: #111a2b; color: #aebbd7; font-size: 11px; }
 @media (max-width: 700px) {
@@ -131,7 +145,6 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .hero h1 { font-size: clamp(44px, 12vw, 60px); }
   .hero-copy { margin-top: 8px; }
   .universe .hero { top: 5%; }
-  .home-shell > .constellation { inset: 50% 0 7%; }
 }
 @media (max-width: 700px) and (max-height: 520px) {
   .home-shell > .constellation { gap: 2px; }

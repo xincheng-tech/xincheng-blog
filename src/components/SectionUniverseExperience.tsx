@@ -1,94 +1,57 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Color, Vector3 } from "three";
-import type { Mesh } from "three";
+import { Vector3 } from "three";
 import type { Section } from "../data/sections";
 import { GalaxyBackdrop } from "./StarfieldScene";
 import { SceneErrorBoundary } from "./SceneErrorBoundary";
+import { PlanetBody, surfaceFor } from "./PlanetBody";
 
 type Props = { section: Section };
 
 const desktopPositions: [number, number, number][] = [
   [-5.1, 1.2, -14],
   [5.1, 0.3, -16],
-  [0.3, -4.2, -14],
+  [0.3, -2.8, -14],
 ];
 
 const mobilePositions: [number, number, number][] = [
-  [-3.4, 0.2, -11],
-  [3.4, -0.5, -13],
-  [0, -3.4, -11],
+  [-1.85, 0.7, -13],
+  [2.4, -0.45, -15],
+  [-0.15, -2.0, -13],
 ];
 
-function CentralPlanet({ color }: { color: string }) {
-  const tint = useMemo(() => new Color(color), [color]);
-  return (
-    <group position={[0, 0, -19]}>
-      <mesh>
-        <sphereGeometry args={[1.7, 48, 48]} />
-        <meshPhysicalMaterial color={tint} emissive={tint} emissiveIntensity={0.1} roughness={0.62} metalness={0.16} clearcoat={0.7} clearcoatRoughness={0.28} />
-      </mesh>
-      <mesh scale={1.28}>
-        <sphereGeometry args={[1.7, 32, 32]} />
-        <meshBasicMaterial color={tint} transparent opacity={0.05} depthWrite={false} />
-      </mesh>
-      <mesh rotation={[Math.PI / 2.15, 0.15, 0.2]}>
-        <torusGeometry args={[2.45, 0.022, 6, 120]} />
-        <meshBasicMaterial color={tint} transparent opacity={0.44} />
-      </mesh>
-      <pointLight position={[2.5, 2, 4]} color={tint} intensity={2.4} distance={18} />
-    </group>
-  );
-}
+const sectionLight: [number, number, number] = [-11, 6, -9];
+const moonSurfaces = ["rock", "ocean", "gas"] as const;
 
 function ContentPlanet({
   position,
-  color,
+  index,
+  mobile,
   selected,
   reducedMotion,
   onSelect,
 }: {
   position: [number, number, number];
-  color: string;
+  index: number;
+  mobile: boolean;
   selected: boolean;
   reducedMotion: boolean;
   onSelect: () => void;
 }) {
-  const mesh = useRef<Mesh>(null);
-  const tint = useMemo(() => new Color(color), [color]);
-  useFrame((_, delta) => {
-    if (!mesh.current) return;
-    const size = selected ? 1.2 : 1;
-    if (reducedMotion) {
-      mesh.current.scale.setScalar(size);
-      return;
-    }
-    const ease = 1 - Math.exp(-delta * 5);
-    mesh.current.scale.setScalar(mesh.current.scale.x + (size - mesh.current.scale.x) * ease);
-    mesh.current.rotation.y += delta * 0.12;
-  });
-
   return (
     <group position={position}>
-      <mesh
-        ref={mesh}
-        onPointerEnter={(event) => {
-          event.stopPropagation();
-          onSelect();
-        }}
+      <PlanetBody
+        surface={moonSurfaces[index % moonSurfaces.length]}
+        seed={index + 4}
+        light={sectionLight}
+        radius={(mobile ? 0.49 : 0.67) * (selected ? 1.08 : 1)}
+        mobile={mobile}
+        animate={!reducedMotion}
         onClick={(event) => {
           event.stopPropagation();
           onSelect();
         }}
-      >
-        <sphereGeometry args={[0.72, 32, 32]} />
-        <meshPhysicalMaterial color={tint} emissive={tint} emissiveIntensity={selected ? 0.35 : 0.14} roughness={0.52} metalness={0.12} clearcoat={0.8} />
-      </mesh>
-      <mesh rotation={[0.35, 0.2, 0.4]}>
-        <torusGeometry args={[1.06, 0.014, 5, 80]} />
-        <meshBasicMaterial color={tint} transparent opacity={selected ? 0.88 : 0.44} />
-      </mesh>
-      <pointLight color={tint} intensity={selected ? 1.35 : 0.55} distance={6} />
+      />
     </group>
   );
 }
@@ -124,7 +87,7 @@ function SectionCamera({ positions, selectedIndex, reducedMotion }: { positions:
 
 export function SectionUniverseExperience({ section }: Props) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [mobile, setMobile] = useState(false);
+  const [mobile, setMobile] = useState(() => window.matchMedia("(max-width: 700px)").matches);
   const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   const [sceneAvailable, setSceneAvailable] = useState(true);
   const positions = useMemo(() => mobile ? mobilePositions : desktopPositions, [mobile]);
@@ -165,20 +128,9 @@ export function SectionUniverseExperience({ section }: Props) {
         }
         choose(index);
       };
-      const leave = () => {
-        if (!link.matches(":focus")) choose(null);
-      };
       link.addEventListener("click", activate);
-      link.addEventListener("pointerenter", activate);
-      link.addEventListener("pointerleave", leave);
-      link.addEventListener("focus", activate);
-      link.addEventListener("blur", leave);
       cleanup.push(() => {
         link.removeEventListener("click", activate);
-        link.removeEventListener("pointerenter", activate);
-        link.removeEventListener("pointerleave", leave);
-        link.removeEventListener("focus", activate);
-        link.removeEventListener("blur", leave);
       });
     });
     return () => cleanup.forEach((remove) => remove());
@@ -201,18 +153,21 @@ export function SectionUniverseExperience({ section }: Props) {
           <Canvas
             className="section-canvas"
             camera={{ position: [0, 0, 0], fov: 54, near: 0.1, far: 120 }}
-            dpr={mobile ? [1, 1.25] : [1, 1.65]}
+            dpr={mobile ? [1, 1.2] : [1, 1.5]}
             gl={{ alpha: true, antialias: !mobile, powerPreference: "low-power" }}
           >
-            <ambientLight intensity={0.48} />
-            <directionalLight position={[3, 6, 8]} intensity={1.25} color="#fff4dc" />
             <GalaxyBackdrop mobile={mobile} animate={!reducedMotion} />
-            <CentralPlanet color={section.color} />
+            <group position={[0, 0, -19]}>
+              <PlanetBody surface={surfaceFor(section.slug)} light={sectionLight}
+                radius={mobile ? 1.6 : 1.9} mobile={mobile} animate={!reducedMotion}
+                ring={section.slug === "podcast"} />
+            </group>
             {section.items.map((item, index) => (
               <ContentPlanet
                 key={item.title}
                 position={positions[index % positions.length]}
-                color={section.color}
+                index={index}
+                mobile={mobile}
                 selected={selectedIndex === index}
                 reducedMotion={reducedMotion}
                 onSelect={() => choose(index)}

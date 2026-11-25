@@ -30,6 +30,9 @@ npm run preview
 ## 参考项目
 
 - [three.js](https://github.com/mrdoob/three.js) — 渲染基础
+- [Three.js Bump Mapping](https://github.com/mrdoob/three.js/blob/dev/examples/webgl_materials_bumpmap.html) — 行星表面细节与受光的参考
+- [Drei Stars](https://github.com/pmndrs/drei/blob/master/src/core/Stars.tsx) — 批量绘制三维星点的参考
+- [Solar System Three.js](https://github.com/sanderblue/solar-system-threejs) — 恒星、行星和轨道的空间关系参考
 - [React Three Fiber](https://github.com/pmndrs/react-three-fiber) — React 场景生命周期
 - [postprocessing](https://github.com/pmndrs/postprocessing) — 后处理组件
 - [folio-2019](https://github.com/brunosimon/folio-2019) — 相机与空间交互编排参考，仅参考方法
