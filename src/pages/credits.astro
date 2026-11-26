@@ -1,14 +1,166 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
+import { CosmicEffectsShell } from "../components/CosmicEffectsShell";
+import ShinyText from "../components/react-bits/ShinyText";
+import GradientText from "../components/react-bits/GradientText";
+import SpotlightCard from "../components/react-bits/SpotlightCard";
+import HoloCard from "../components/react-bits/HoloCard";
+import StarBorder from "../components/react-bits/StarBorder";
+import CurvedLoop from "../components/react-bits/CurvedLoop";
 import { sitePath } from "../sitePath";
+
+const sources = [
+  {
+    badge: "MOTION UI · MIT + COMMONS CLAUSE",
+    title: "React Bits (DavidHDev/react-bits)",
+    url: "https://github.com/DavidHDev/react-bits",
+    copy: "提供 DecryptedText、ShinyText、GradientText、Aurora、ClickSpark、SpotlightCard、StarBorder、ElectricBorder、HoloCard、Magnet、TargetCursor、Dock 与 CurvedLoop 动态交互组件。",
+    icon: "art/illustrations/project-dark.svg",
+    accent: "#64f0ff",
+  },
+  {
+    badge: "PLANETARY ART & MAPS · MIT / PUBLIC DOMAIN / CC BY 4.0",
+    title: "Wakusei Planets (johnmorrisdotca/wakusei-planets)",
+    url: "https://github.com/johnmorrisdotca/wakusei-planets",
+    copy: "提供地球、木卫一、土星等手绘质感星球插画卡牌，以及木卫一、木卫二、土卫二、土卫六、谷神星与冥王星天体表面贴图（源自 NASA / JPL / USGS 公共领域影像与 Solar System Scope）。",
+    icon: "art/illustrations/snapshot-dark.svg",
+    accent: "#ffd479",
+  },
+  {
+    badge: "CELESTIAL TEXTURES · CC BY 4.0",
+    title: "Solar System Scope & ESO Milky Way",
+    url: "https://www.solarsystemscope.com/textures/",
+    copy: "八大行星、月球、太阳与土星环基础贴图来自 Solar System Scope；银河天球全景 The Milky Way panorama 摄影署名为 ESO/S. Brunier（CC BY 4.0）。",
+    icon: "art/illustrations/network-dark.svg",
+    accent: "#8ea8ff",
+  },
+  {
+    badge: "VECTOR ILLUSTRATIONS & LOADERS · MIT LICENSE",
+    title: "Gravity UI Illustrations · SVG-Loaders · Boring Avatars",
+    url: "https://github.com/gravity-ui/illustrations",
+    copy: "深色矢量插画来自 gravity-ui/illustrations（MIT），声波与星环动态指示图标来自 SamHerbert/SVG-Loaders（MIT），程序化星云徽章改编自 boringdesigners/boring-avatars（MIT）。",
+    icon: "art/illustrations/chart-dark.svg",
+    accent: "#9beeff",
+  },
+];
 ---
-<SiteLayout title="影像来源 · 星辰界">
-  <main class="credits-page">
-    <a href={sitePath()}>← 返回太阳系</a>
-    <h1>影像来源</h1>
-    <p>行星、月球、太阳和土星环贴图来自 <a href="https://www.solarsystemscope.com/textures/">Solar System Scope</a>。</p>
-    <p>银河全景 <a href="https://www.eso.org/public/images/eso0932a/">The Milky Way panorama</a> 摄影署名为 ESO/S. Brunier。</p>
-    <p>以上素材按 <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> 授权使用，已缩小尺寸并转为 WebP，场景中的光照由网站渲染。</p>
-    <p>为便于浏览，天体尺寸、距离和位置经过调整。</p>
-  </main>
+<SiteLayout title="影像与美术来源 · 星辰界">
+  <div class="credits-shell">
+    <div class="sky-wash" aria-hidden="true"></div>
+    <CosmicEffectsShell
+      client:only="react"
+      activeSlug="credits"
+      auroraStops={["#251f66", "#64f0ff", "#ffd479"]}
+      accentColor="#64f0ff"
+    />
+
+    <main class="credits-page">
+      <div class="credits-topbar">
+        <StarBorder
+          client:load
+          as="a"
+          href={sitePath()}
+          data-warp-return
+          color="#64f0ff"
+          radius={999}
+          duration={4}
+          backgroundColor="rgba(10, 15, 32, 0.78)"
+          borderColor="rgba(255, 255, 255, 0.14)"
+          className="back-star-link"
+          data-cursor-label="返回太阳系"
+        >
+          ← 返回太阳系
+        </StarBorder>
+      </div>
+
+      <header class="credits-hero">
+        <p class="eyebrow">
+          <ShinyText client:load text="OPEN SOURCE ART & ASTRONOMY CREDITS" color="#9aa8cc" shineColor="#ffffff" speed={2.8} />
+        </p>
+        <h1>
+          <GradientText
+            client:load
+            colors={["#fff7e2", "#64f0ff", "#8ea8ff", "#ffd479"]}
+            variant="flow"
+            animationSpeed={7}
+            glow={0.28}
+          >
+            影像与开源美术致谢
+          </GradientText>
+        </h1>
+        <p class="credits-lead">
+          星辰界中的所有天体贴图、手绘星球卡面、矢量插画与动态交互组件均来自许可证清晰的 GitHub 开源项目与天文公共影像库。
+        </p>
+      </header>
+
+      <div class="credits-holo-row" aria-label="星球全息收藏卡展示">
+        <HoloCard
+          client:only="react"
+          image={sitePath("art/planets/hero-earth-painted.png")}
+          alt="地球手绘全息卡"
+          preset="cosmos"
+          width={176}
+          radius={14}
+          idle={true}
+        />
+        <HoloCard
+          client:only="react"
+          image={sitePath("art/planets/hero-io-painted.png")}
+          alt="木卫一手绘全息卡"
+          preset="shards"
+          width={176}
+          radius={14}
+          idle={true}
+        />
+        <HoloCard
+          client:only="react"
+          image={sitePath("art/planets/hero-saturn-painted.png")}
+          alt="土星播客手绘全息卡"
+          preset="gold"
+          width={176}
+          radius={14}
+          idle={true}
+        />
+      </div>
+
+      <section class="credits-grid" aria-label="来源列表">
+        {sources.map((item) => (
+          <SpotlightCard
+            client:load
+            spotlightColor={item.accent}
+            intensity={0.18}
+            spotlightSize={260}
+            borderGlow={0.75}
+            className="credit-card"
+          >
+            <div class="credit-card__head">
+              <img src={sitePath(item.icon)} alt="" width="44" height="44" class="credit-card__illust" />
+              <div>
+                <span class="credit-card__badge" style={"color:" + item.accent}>{item.badge}</span>
+                <h2>
+                  <a href={item.url} target="_blank" rel="noreferrer" data-cursor-label="访问 GitHub / 官方来源">
+                    {item.title} ↗
+                  </a>
+                </h2>
+              </div>
+            </div>
+            <p>{item.copy}</p>
+          </SpotlightCard>
+        ))}
+      </section>
+
+      <div class="credits-marquee" aria-hidden="true">
+        <CurvedLoop
+          client:only="react"
+          marqueeText="REACT BITS ✦ WAKUSEI PLANETS ✦ SOLAR SYSTEM SCOPE ✦ GRAVITY UI ✦ SVG LOADERS ✦ BORING AVATARS"
+          speed={0.8}
+          curveAmount={45}
+          fontSize={22}
+          letterSpacing={4}
+          edgeFade={0.35}
+          color="rgba(176, 194, 232, 0.36)"
+        />
+      </div>
+    </main>
+  </div>
 </SiteLayout>

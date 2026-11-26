@@ -3,23 +3,89 @@ import SiteLayout from "../layouts/SiteLayout.astro";
 import { sections } from "../data/sections";
 import { planetSurfaces } from "../data/planetSurfaces";
 import { UniverseExperience } from "../components/UniverseExperience";
+import { CosmicEffectsShell } from "../components/CosmicEffectsShell";
 import DecryptedText from "../components/DecryptedText.jsx";
+import ShinyText from "../components/react-bits/ShinyText";
+import GradientText from "../components/react-bits/GradientText";
+import CurvedLoop from "../components/react-bits/CurvedLoop";
+import BorderGlow from "../components/react-bits/BorderGlow";
+import Magnet from "../components/react-bits/Magnet";
 import { sitePath } from "../sitePath";
+import { solarTexturePath } from "../data/solarTextures";
+
+const preloadHomeTextures = ["milky-way", "sun", "earth_daymap", "mars", "saturn", "saturn-ring"];
 ---
 <SiteLayout>
+  <Fragment slot="head">
+    {preloadHomeTextures.map((file) => (
+      <link rel="preload" as="image" type="image/webp" href={solarTexturePath(file)} crossorigin="anonymous" />
+    ))}
+  </Fragment>
   <main class="home-shell">
     <div class="sky-wash" aria-hidden="true"></div>
+    <CosmicEffectsShell
+      client:only="react"
+      activeSlug="home"
+      auroraStops={["#13265c", "#38bdf8", "#6366f1"]}
+      accentColor="#64f0ff"
+    />
     <UniverseExperience client:only="react" sections={sections} />
 
     <header class="site-header">
-      <a class="wordmark" href={sitePath()} aria-label="星辰界首页">XINGCHEN <span>VERSE</span></a>
-      <span class="header-note"><i></i> 一个人的小宇宙</span>
+      <Magnet client:load padding={40} magnetStrength={3.2} maxOffset={6}>
+        <a class="wordmark" href={sitePath()} data-cursor-label="ORIGIN // 星辰界" aria-label="星辰界首页">
+          XINGCHEN <span>VERSE</span>
+        </a>
+      </Magnet>
+      <span class="header-note">
+        <i></i>
+        <ShinyText
+          client:load
+          text="ORBITAL TELEMETRY · ONLINE"
+          color="#9aa8cc"
+          shineColor="#ffffff"
+          speed={3.4}
+          delay={1.2}
+        />
+      </span>
     </header>
 
     <section class="hero" aria-labelledby="site-title">
-      <p class="eyebrow">太阳系 · SOLAR SYSTEM</p>
-      <h1 id="site-title">星辰界</h1>
-      <p class="hero-copy">选择地球、火星或土星，进入对应栏目。</p>
+      <p class="eyebrow">
+        <ShinyText
+          client:load
+          text="SOLAR SYSTEM // THREE REALMS"
+          color="#a8b5da"
+          shineColor="#fff4cf"
+          speed={2.8}
+        />
+      </p>
+      <h1 id="site-title">
+        <GradientText
+          client:load
+          colors={["#fff8e6", "#cfe6ff", "#64f0ff", "#ffd479", "#93c5fd"]}
+          animationSpeed={7}
+          variant="flow"
+          glow={0.32}
+          followPointer={true}
+        >
+          星辰界
+        </GradientText>
+      </h1>
+      <p class="hero-copy">选择地球、火星或土星，跃迁进入日常、技术与播客。</p>
+      <div class="hero-ribbon" aria-hidden="true">
+        <CurvedLoop
+          client:only="react"
+          marqueeText="XINGCHEN VERSE ✦ SOLAR SYSTEM ✦ DAILY · TECH · PODCAST ✦ INTERACTIVE COSMOS"
+          speed={0.65}
+          curveAmount={68}
+          fontSize={22}
+          letterSpacing={5}
+          edgeFade={0.42}
+          color="rgba(182, 200, 240, 0.38)"
+          interactive={false}
+        />
+      </div>
     </section>
 
     <nav class="constellation" aria-label="栏目星辰">
@@ -28,29 +94,98 @@ import { sitePath } from "../sitePath";
           class:list={["constellation-link", "constellation-link--" + section.slug]}
           href={sitePath(section.slug + "/")}
           data-slug={section.slug}
+          data-cursor-label={"WARP // " + planetSurfaces[section.surface].name + " · " + section.name}
           style={"--accent:" + section.color}
           aria-label={planetSurfaces[section.surface].name + " · " + section.name + "：" + section.intro}
         >
-          <DecryptedText
+          <BorderGlow
             client:load
-            text={planetSurfaces[section.surface].name + " · " + section.name}
-            parentClassName="link-name"
-            encryptedClassName="link-name-encrypted"
-            animateOn="hover"
-            effect="scramble"
-            sequential={true}
-            revealDirection="start"
-            speed={38}
-            characters="0123456789+−×<>"
-          />
-          <span class="link-summary">{section.intro}</span>
+            glowColor={section.glowHsl}
+            colors={[section.color, "#9beeff", "#ffffff"]}
+            backgroundColor="rgba(6, 11, 25, 0.82)"
+            borderRadius={10}
+            glowRadius={26}
+            glowIntensity={1.05}
+            coneSpread={22}
+            animated={true}
+            className="hud-portal-shell"
+          >
+            <div class="hud-portal">
+              <span class="hud-corner hud-corner--tl" aria-hidden="true"></span>
+              <span class="hud-corner hud-corner--tr" aria-hidden="true"></span>
+              <span class="hud-corner hud-corner--bl" aria-hidden="true"></span>
+              <span class="hud-corner hud-corner--br" aria-hidden="true"></span>
+
+              <div class="hud-portal__bar">
+                <span class="hud-portal__sector">
+                  <i class="hud-led" aria-hidden="true"></i>
+                  {section.sectorId}
+                </span>
+                <span class="hud-portal__au">{section.au}</span>
+              </div>
+
+              <div class="hud-portal__head">
+                <span class="hud-planet-glyph" aria-hidden="true">
+                  {section.slug === "podcast" ? (
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <circle cx="12" cy="12" r="5.2" />
+                      <ellipse cx="12" cy="12" rx="10.5" ry="3.8" transform="rotate(-22 12 12)" />
+                    </svg>
+                  ) : section.slug === "tech" ? (
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <circle cx="12" cy="12" r="6.5" />
+                      <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3" />
+                      <circle cx="12" cy="12" r="2" fill="currentColor" />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <circle cx="11" cy="12.5" r="6.2" />
+                      <circle cx="18.5" cy="6.5" r="2" />
+                      <path d="M4.2 15.2c3.8-2.4 9.5-2.6 13.8-.4" stroke-opacity="0.65" />
+                    </svg>
+                  )}
+                </span>
+
+                <DecryptedText
+                  client:load
+                  text={planetSurfaces[section.surface].name + " · " + section.name}
+                  parentClassName="link-name"
+                  encryptedClassName="link-name-encrypted"
+                  animateOn="inViewHover"
+                  effect="scramble"
+                  sequential={true}
+                  revealDirection="start"
+                  speed={34}
+                  characters="0123456789/+-<>#"
+                />
+
+                <span class="hud-portal__launch" aria-hidden="true">↗</span>
+              </div>
+
+              <div class="hud-portal__rule" aria-hidden="true"><span></span></div>
+
+              <p class="link-summary">{section.intro}</p>
+
+              <div class="hud-portal__foot">
+                <span>{section.specTag}</span>
+                {section.slug === "podcast" ? (
+                  <span class="hud-portal__enter">
+                    <img src={sitePath("art/loaders/bars.svg")} alt="" width="10" height="10" />
+                    SIGNAL ▸
+                  </span>
+                ) : (
+                  <span class="hud-portal__enter">WARP ▸</span>
+                )}
+              </div>
+            </div>
+          </BorderGlow>
         </a>
       ))}
     </nav>
 
     <footer class="site-footer">
-      <span>杨鑫成 · PERSONAL UNIVERSE</span>
-      <a class="art-credit-link" href={sitePath("credits/")}>影像来源</a>
+      <span>XINGCHEN // PERSONAL UNIVERSE</span>
+      <a class="art-credit-link" data-cursor-label="CREDITS // 开源美术致谢" href={sitePath("credits/")}>影像与美术来源</a>
     </footer>
   </main>
 </SiteLayout>

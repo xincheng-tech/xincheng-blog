@@ -2,7 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react"
 import type { Section } from "../data/sections";
 import { sitePath } from "../sitePath";
 import { sectionTextureFiles, solarTexturePath } from "../data/solarTextures";
-import { rememberArrival } from "../travelHandoff";
+import { rememberArrival, revealArrival } from "../travelHandoff";
 import { SceneErrorBoundary } from "./SceneErrorBoundary";
 
 const StarfieldScene = lazy(() =>
@@ -16,8 +16,13 @@ type Props = { sections: Section[] };
 export function UniverseExperience({ sections }: Props) {
   const [phase, setPhase] = useState<Phase>("idle");
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
+  const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
   const [sceneReady, setSceneReady] = useState(false);
+  const [texturedReady, setTexturedReady] = useState(false);
   const [sceneAvailable, setSceneAvailable] = useState(true);
+  const [arrivingFromWarp] = useState(() =>
+    typeof document !== "undefined" && "travelArrival" in document.documentElement.dataset,
+  );
   const [reducedMotion, setReducedMotion] = useState(() =>
     window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
@@ -40,6 +45,7 @@ export function UniverseExperience({ sections }: Props) {
       if (!event.persisted) return;
       destination.current = null;
       setSelectedSlug(null);
+      setHoveredSlug(null);
       setPhase("idle");
     };
     window.addEventListener("pageshow", restore);
@@ -51,6 +57,15 @@ export function UniverseExperience({ sections }: Props) {
     };
   }, []);
 
+  useEffect(() => {
+    for (const section of sections) {
+      const link = document.querySelector<HTMLAnchorElement>('[data-slug="' + section.slug + '"]');
+      if (!link) continue;
+      const active = hoveredSlug === section.slug || selectedSlug === section.slug;
+      link.classList.toggle("is-selected", active);
+    }
+  }, [hoveredSlug, selectedSlug, sections]);
+
   const arrive = useCallback(() => {
     if (!destination.current) return;
     const slug = destination.current;
@@ -60,9 +75,10 @@ export function UniverseExperience({ sections }: Props) {
       window.location.assign(path);
       return;
     }
+    document.documentElement.dataset.travelMode = "planet";
     setPhase("arrived");
     navigationTimer.current = window.setTimeout(() => {
-      rememberArrival(path);
+      rememberArrival(path, "planet");
       window.location.assign(path);
     }, 200);
   }, [reducedMotion, sceneAvailable]);
@@ -71,34 +87,43 @@ export function UniverseExperience({ sections }: Props) {
     if (phase === "travel" && (reducedMotion || !sceneAvailable)) arrive();
   }, [arrive, phase, reducedMotion, sceneAvailable]);
 
-  const prefetch = useCallback((slug: string) => {
-    if (prefetched.current.has(slug)) return;
-    prefetched.current.add(slug);
-    const hint = document.createElement("link");
-    hint.rel = "prefetch";
-    hint.href = sitePath(slug + "/");
-    document.head.append(hint);
-    const section = sections.find((entry) => entry.slug === slug);
-    if (!section) return;
-    for (const file of sectionTextureFiles(section)) {
-      const image = new Image();
-      image.crossOrigin = "anonymous";
-      image.fetchPriority = "low";
-      image.src = solarTexturePath(file);
-    }
-  }, [sections]);
+  const prefetch = useCallback(
+    (slug: string) => {
+      if (prefetched.current.has(slug)) return;
+      prefetched.current.add(slug);
+      const hint = document.createElement("link");
+      hint.rel = "prefetch";
+      hint.href = sitePath(slug + "/");
+      document.head.append(hint);
+      const section = sections.find((entry) => entry.slug === slug);
+      if (!section) return;
+      for (const file of sectionTextureFiles(section)) {
+        const image = new Image();
+        image.crossOrigin = "anonymous";
+        image.fetchPriority = "low";
+        image.src = solarTexturePath(file);
+      }
+      const cover = new Image();
+      cover.fetchPriority = "low";
+      cover.src = sitePath(section.heroArt);
+    },
+    [sections],
+  );
 
-  const activate = useCallback((section: Section) => {
-    if (destination.current || phase === "arrived") return;
-    if (reducedMotion || !sceneAvailable || !sceneReady) {
-      window.location.assign(sitePath(section.slug + "/"));
-      return;
-    }
-    destination.current = section.slug;
-    setSelectedSlug(section.slug);
-    setPhase("travel");
-    prefetch(section.slug);
-  }, [phase, prefetch, reducedMotion, sceneAvailable, sceneReady]);
+  const activate = useCallback(
+    (section: Section) => {
+      if (destination.current || phase === "arrived") return;
+      if (reducedMotion || !sceneAvailable || !sceneReady) {
+        window.location.assign(sitePath(section.slug + "/"));
+        return;
+      }
+      destination.current = section.slug;
+      setSelectedSlug(section.slug);
+      setPhase("travel");
+      prefetch(section.slug);
+    },
+    [phase, prefetch, reducedMotion, sceneAvailable, sceneReady],
+  );
 
   useEffect(() => {
     const cleanup: (() => void)[] = [];
@@ -111,7 +136,13 @@ export function UniverseExperience({ sections }: Props) {
         event.preventDefault();
         activate(section);
       };
-      const enter = () => prefetch(section.slug);
+      const enter = () => {
+        setHoveredSlug(section.slug);
+        prefetch(section.slug);
+      };
+      const leave = () => {
+        setHoveredSlug((cur) => (cur === section.slug ? null : cur));
+      };
       const keydown = (event: KeyboardEvent) => {
         if ((event.key === " " || event.key === "Spacebar") && !event.repeat) {
           event.preventDefault();
@@ -121,12 +152,16 @@ export function UniverseExperience({ sections }: Props) {
 
       link.addEventListener("click", click);
       link.addEventListener("pointerenter", enter);
+      link.addEventListener("pointerleave", leave);
       link.addEventListener("focus", enter);
+      link.addEventListener("blur", leave);
       link.addEventListener("keydown", keydown);
       cleanup.push(() => {
         link.removeEventListener("click", click);
         link.removeEventListener("pointerenter", enter);
+        link.removeEventListener("pointerleave", leave);
         link.removeEventListener("focus", enter);
+        link.removeEventListener("blur", leave);
         link.removeEventListener("keydown", keydown);
       });
     }
@@ -144,10 +179,22 @@ export function UniverseExperience({ sections }: Props) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [phase]);
 
-  const onSceneError = useCallback(() => setSceneAvailable(false), []);
+  const onSceneError = useCallback(() => {
+    revealArrival();
+    setSceneAvailable(false);
+  }, []);
   const onReturn = useCallback(() => setPhase("idle"), []);
+
   return (
-    <div className={"universe " + (phase === "travel" || phase === "arrived" ? "is-traveling" : "") + (phase === "arrived" ? " is-arriving" : "") + (sceneAvailable ? "" : " scene-fallback")}>
+    <div
+      className={
+        "universe " +
+        (texturedReady ? "is-scene-ready " : "is-scene-warming ") +
+        (phase === "travel" || phase === "arrived" ? "is-traveling" : "") +
+        (phase === "arrived" ? " is-arriving" : "") +
+        (sceneAvailable ? "" : " scene-fallback")
+      }
+    >
       {sceneAvailable && (
         <SceneErrorBoundary onError={onSceneError}>
           <Suspense fallback={null}>
@@ -155,9 +202,12 @@ export function UniverseExperience({ sections }: Props) {
               <StarfieldScene
                 sections={sections}
                 selectedSlug={selectedSlug}
+                hoveredSlug={hoveredSlug}
                 phase={phase}
+                arrivingFromWarp={arrivingFromWarp}
                 reducedMotion={reducedMotion}
                 mobile={mobile}
+                onHover={setHoveredSlug}
                 onArrive={arrive}
                 onReturn={onReturn}
                 onActivate={(slug) => {
@@ -166,6 +216,7 @@ export function UniverseExperience({ sections }: Props) {
                 }}
                 onContextLost={onSceneError}
                 onReady={() => setSceneReady(true)}
+                onFirstTexturedFrame={() => setTexturedReady(true)}
               />
             </div>
           </Suspense>
@@ -173,7 +224,9 @@ export function UniverseExperience({ sections }: Props) {
       )}
 
       {!sceneAvailable && (
-        <p className="fallback-note" role="status">星海渲染暂不可用，栏目入口仍可直接访问。</p>
+        <p className="fallback-note" role="status">
+          星海渲染暂不可用，栏目入口仍可直接访问。
+        </p>
       )}
     </div>
   );

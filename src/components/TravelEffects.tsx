@@ -2,11 +2,14 @@ import { useMemo } from "react";
 import { Bloom, ChromaticAberration, EffectComposer } from "@react-three/postprocessing";
 import { Vector2 } from "three";
 
-export function TravelEffects() {
-  const offset = useMemo(() => new Vector2(0.0008, 0.0008), []);
+export function TravelEffects({ traveling = false }: { traveling?: boolean }) {
+  const offset = useMemo(
+    () => new Vector2(traveling ? 0.0014 : 0.00035, traveling ? 0.0014 : 0.00035),
+    [traveling],
+  );
   return (
     <EffectComposer multisampling={0}>
-      <Bloom intensity={0.72} luminanceThreshold={0.34} mipmapBlur />
+      <Bloom intensity={traveling ? 0.92 : 0.45} luminanceThreshold={0.42} mipmapBlur />
       <ChromaticAberration offset={offset} />
     </EffectComposer>
   );

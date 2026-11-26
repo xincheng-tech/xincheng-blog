@@ -1,11 +1,71 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
+import { CosmicEffectsShell } from "../components/CosmicEffectsShell";
+import DecryptedText from "../components/DecryptedText.jsx";
+import GradientText from "../components/react-bits/GradientText";
+import StarBorder from "../components/react-bits/StarBorder";
+import Magnet from "../components/react-bits/Magnet";
 import { sitePath } from "../sitePath";
 ---
 <SiteLayout title="未找到 · 星辰界">
   <main class="not-found">
-    <p class="eyebrow">坐标尚未标记</p>
-    <h1>这颗星还没有名字</h1>
-    <a class="back-link" href={sitePath()}>← 返回星海</a>
+    <div class="sky-wash" aria-hidden="true"></div>
+    <CosmicEffectsShell
+      client:only="react"
+      activeSlug="404"
+      auroraStops={["#13265c", "#38bdf8", "#8ea8ff"]}
+      accentColor="#64f0ff"
+    />
+
+    <img
+      src={sitePath("art/illustrations/not-found-dark.svg")}
+      alt=""
+      width="180"
+      height="180"
+      class="not-found__art"
+    />
+    <p class="eyebrow">
+      <DecryptedText
+        client:load
+        text="SECTOR 404 · 坐标尚未标记"
+        animateOn="view"
+        sequential={true}
+        speed={38}
+        characters="0123456789+−×<>✦"
+      />
+    </p>
+    <h1>
+      <GradientText
+        client:load
+        colors={["#fff4dc", "#64f0ff", "#8ea8ff", "#ffd479"]}
+        variant="flow"
+        animationSpeed={6}
+        glow={0.3}
+      >
+        这颗星还没有名字
+      </GradientText>
+    </h1>
+    <p class="not-found__sub">探测器偏离了已知星图，点击下方跃迁门返回主恒星系。</p>
+    <div class="not-found__action">
+      <Magnet client:load padding={40} magnetStrength={2.8} maxOffset={7}>
+        <StarBorder
+          client:load
+          as="a"
+          href={sitePath()}
+          data-warp-return
+          color="#ffd479"
+          radius={999}
+          duration={3.5}
+          sparkle={true}
+          glow={0.75}
+          backgroundColor="rgba(12, 18, 36, 0.82)"
+          borderColor="rgba(255, 255, 255, 0.18)"
+          className="back-star-link"
+          data-cursor-label="跃迁返回星海"
+        >
+          ← 返回星海太阳系
+        </StarBorder>
+      </Magnet>
+    </div>
   </main>
 </SiteLayout>

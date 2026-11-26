@@ -7,7 +7,7 @@ export function solarTexturePath(file: string) {
 }
 
 export function sectionTextureFiles(section: Section) {
-  const surfaces = [section.surface, ...section.items.map((item) => item.surface)];
+  const surfaces = [section.surface, ...section.satellites.map((sat) => sat.surface)];
   const files = new Set(["milky-way", ...surfaces.map((surface) => planetSurfaces[surface].file)]);
   if (surfaces.includes("saturn")) files.add("saturn-ring");
   return [...files];

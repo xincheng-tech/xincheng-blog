@@ -10,7 +10,7 @@ type Props = {
 
 const {
   title = "星辰界 · 杨鑫成",
-  description = "一片星海，几段日常。欢迎来到杨鑫成的个人小世界。",
+  description = "一片星海，几段日常、技术与播客。欢迎来到杨鑫成的个人小世界。",
 } = Astro.props;
 ---
 <!doctype html>
@@ -27,18 +27,55 @@ const {
         const value = sessionStorage.getItem(handoffKey);
         sessionStorage.removeItem(handoffKey);
         if (value && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
-          const { path, expires } = JSON.parse(value);
-          if (path === location.pathname && Date.now() < expires) {
+          const { path, mode, expires } = JSON.parse(value);
+          const norm = (p) => String(p || "").replace(/\/+$/, "") || "/";
+          if (norm(path) === norm(location.pathname) && Date.now() < expires) {
             document.documentElement.dataset.travelArrival = "";
-            window.setTimeout(() => delete document.documentElement.dataset.travelArrival, 5000);
+            if (mode) document.documentElement.dataset.travelMode = mode;
+            window.setTimeout(() => {
+              delete document.documentElement.dataset.travelArrival;
+              delete document.documentElement.dataset.travelMode;
+            }, 4500);
           }
         }
+        window.addEventListener("pageshow", (event) => {
+          if (event.persisted) {
+            delete document.documentElement.dataset.travelArrival;
+            delete document.documentElement.dataset.travelDepart;
+            delete document.documentElement.dataset.travelMode;
+          }
+        });
       } catch {}
     </script>
     <slot name="head" />
   </head>
   <body>
     <slot />
-    <div class="travel-veil" aria-hidden="true"><span>正在载入星球影像</span></div>
+    <div class="travel-veil" aria-hidden="true">
+      <div class="travel-veil__hud">
+        <div class="travel-veil__ring-wrap">
+          <img src={sitePath("art/loaders/rings.svg")} alt="" width="48" height="48" />
+        </div>
+        <span class="travel-veil__code">HYPERJUMP TELEMETRY // SYNCING</span>
+        <span class="travel-veil__text travel-veil__text--planet">正在切入目标行星轨道与高精影像</span>
+        <span class="travel-veil__text travel-veil__text--home">正在跃迁返回太阳系主星场</span>
+        <div class="travel-veil__bar"><i></i></div>
+      </div>
+    </div>
+    <script>
+      import { navigateWithWarp } from "../travelHandoff";
+
+      document.addEventListener("click", (event) => {
+        if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+          return;
+        }
+        const target = event.target instanceof Element ? event.target.closest("a[data-warp-return]") : null;
+        if (!(target instanceof HTMLAnchorElement)) return;
+        const url = new URL(target.href, window.location.origin);
+        if (url.origin !== window.location.origin || url.pathname === window.location.pathname) return;
+        event.preventDefault();
+        navigateWithWarp(url.pathname, "home");
+      });
+    </script>
   </body>
 </html>

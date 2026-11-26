@@ -3,6 +3,13 @@ import SiteLayout from "../layouts/SiteLayout.astro";
 import { sections } from "../data/sections";
 import { planetSurfaces } from "../data/planetSurfaces";
 import { SectionUniverseExperience } from "../components/SectionUniverseExperience";
+import { CosmicEffectsShell } from "../components/CosmicEffectsShell";
+import DecryptedText from "../components/DecryptedText.jsx";
+import ShinyText from "../components/react-bits/ShinyText";
+import GradientText from "../components/react-bits/GradientText";
+import BorderGlow from "../components/react-bits/BorderGlow";
+import StarBorder from "../components/react-bits/StarBorder";
+import Magnet from "../components/react-bits/Magnet";
 import { sitePath } from "../sitePath";
 import { sectionTextureFiles, solarTexturePath } from "../data/solarTextures";
 
@@ -14,6 +21,8 @@ export function getStaticPaths() {
 }
 
 const { section } = Astro.props;
+const activeSlug = section.slug as "daily" | "tech" | "podcast";
+const planetName = planetSurfaces[section.surface].name;
 ---
 <SiteLayout title={section.name + " · 星辰界"} description={section.intro}>
   <Fragment slot="head">
@@ -23,34 +32,127 @@ const { section } = Astro.props;
   </Fragment>
   <main class="section-page section-galaxy" style={"--accent:" + section.color}>
     <div class="sky-wash" aria-hidden="true"></div>
+    <CosmicEffectsShell
+      client:only="react"
+      activeSlug={activeSlug}
+      auroraStops={section.auroraStops}
+      accentColor={section.color}
+    />
     <SectionUniverseExperience client:only="react" section={section} />
+
     <header class="site-header">
-      <a class="wordmark" href={sitePath()} aria-label="星辰界首页">XINGCHEN <span>VERSE</span></a>
-      <span class="header-note"><i></i> 星际档案</span>
+      <Magnet client:load padding={36} magnetStrength={3.2} maxOffset={6}>
+        <a class="wordmark" href={sitePath()} data-warp-return data-cursor-label="RETURN // 太阳系" aria-label="星辰界首页">
+          XINGCHEN <span>VERSE</span>
+        </a>
+      </Magnet>
+      <span class="header-note">
+        <i></i>
+        <ShinyText
+          client:load
+          text={`${section.sectorId} · ${section.moonSummary}`}
+          color="#9eabcf"
+          shineColor="#ffffff"
+          speed={3.2}
+        />
+      </span>
     </header>
-    <a class="back-link" href={sitePath()} aria-label="返回星辰界首页">← 返回太阳系</a>
+
+    <div class="back-link-wrap">
+      <Magnet client:load padding={32} magnetStrength={2.8} maxOffset={6}>
+        <StarBorder
+          client:load
+          as="a"
+          href={sitePath()}
+          data-warp-return
+          color={section.color}
+          radius={8}
+          duration={4.2}
+          glow={0.55}
+          backgroundColor="rgba(8, 13, 28, 0.78)"
+          borderColor="rgba(164, 194, 255, 0.2)"
+          className="back-star-link"
+          data-cursor-label="WARP // 返回太阳系"
+          aria-label="返回星辰界首页"
+        >
+          ← 返回太阳系
+        </StarBorder>
+      </Magnet>
+    </div>
+
     <section class="section-hero" aria-labelledby="section-title">
-      <p class="eyebrow">{planetSurfaces[section.surface].name}</p>
-      <h1 id="section-title">{section.name}</h1>
+      <p class="eyebrow">
+        <DecryptedText
+          client:load
+          text={`${planetName} // ${section.orbitCode}`}
+          animateOn="view"
+          sequential={true}
+          speed={35}
+          characters="0123456789.AU/-+#"
+        />
+      </p>
+      <h1 id="section-title">
+        <GradientText
+          client:load
+          colors={["#ffffff", section.color, "#cfe6ff", section.color]}
+          animationSpeed={6.5}
+          variant="flow"
+          glow={0.34}
+        >
+          {section.name}
+        </GradientText>
+      </h1>
       <p class="section-intro">{section.intro}</p>
     </section>
-    <nav class="content-orbit-nav" aria-label={section.name + "内容星球"}>
+
+    <nav class="content-orbit-nav" aria-label={section.name + "内容档案"}>
       {section.items.map((item, index) => (
         <a
           id={"content-item-" + index}
           href={"#content-item-" + index}
           data-content-index={index}
-          style={"--planet-accent:" + planetSurfaces[item.surface].color}
-          aria-label={"聚焦内容星：" + item.title + "，" + item.meta}
+          data-cursor-label={(item.isPodcast ? "SIGNAL // " : "NODE // ") + `${planetName}-0${index + 1}`}
+          style={"--planet-accent:" + section.color}
+          aria-label={"阅读内容：" + planetName + " - " + item.title}
         >
-          <span class="content-orb-mark" aria-hidden="true"></span>
-          <span class="content-orbit-copy">
-            <strong>{item.title}</strong>
-            <small>{planetSurfaces[item.surface].name} · {item.meta}</small>
-          </span>
+          <BorderGlow
+            client:load
+            glowColor={section.glowHsl}
+            colors={[section.color, "#9beeff", "#ffffff"]}
+            backgroundColor="rgba(7, 12, 26, 0.82)"
+            borderRadius={10}
+            glowRadius={22}
+            glowIntensity={0.95}
+            className="orbit-hud-shell"
+          >
+            <div class="orbit-hud-card">
+              <span class="hud-corner hud-corner--tl" aria-hidden="true"></span>
+              <span class="hud-corner hud-corner--br" aria-hidden="true"></span>
+              <span class="orbit-hud-index">0{index + 1}</span>
+              <span class="content-orbit-copy">
+                <strong>{`${planetName} - ${item.title}`}</strong>
+                <small>
+                  <i class="orbit-hud-dot" aria-hidden="true"></i>
+                  {planetName} · {item.meta}
+                  {item.isPodcast && (
+                    <img
+                      src={sitePath("art/loaders/bars.svg")}
+                      alt=""
+                      width="11"
+                      height="11"
+                      class="orbit-card-eq"
+                    />
+                  )}
+                </small>
+              </span>
+            </div>
+          </BorderGlow>
         </a>
       ))}
     </nav>
-    <footer class="section-footer"><a class="art-credit-link" href={sitePath("credits/")}>影像来源</a></footer>
+
+    <footer class="section-footer">
+      <a class="art-credit-link" data-cursor-label="CREDITS // 开源美术致谢" href={sitePath("credits/")}>影像与美术来源</a>
+    </footer>
   </main>
 </SiteLayout>
